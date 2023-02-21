@@ -1,0 +1,14 @@
+# General
+.DS_Store
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+
+#Others
+contract-address.json
+contracts/attacks
