@@ -1,0 +1,107 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Interact{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>En este primer reto vas a conocer la base de un Smart Contract.</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 0:</b> Conecta al mundo Web3 a través de tu Wallet de Metamask. Si no conectas ¡el juego no puede empezar!</li>
+      <li class="list-group-item"><b>Paso 1:</b> Abre las <i>'Dev Tools'</i> del navegador para poder interactuar con la consola.</li>
+      <li class="list-group-item"><b>Paso 2:</b> Tienes un comando <code>help()</code> que estará contigo en cada reto. Que sea lo primero que ejecutas.</li>
+      <li class="list-group-item"><b>Paso 3:</b> Prueba a ejecutar alguno de los comandos que <code>help()</code> te proporciona.</li>
+      <li class="list-group-item"><b>Paso 4:</b> ¿Qué hace el comando <code>player</code>? ¿Y el comando <code>base</code>?</li>
+      <li class="list-group-item"><b>Paso 5:</b> El contrato <code>base</code> permite gestionar usuarios, retos y flags. ¿Qué es lo que tienes que conseguir?</li>
+      <li class="list-group-item"><b>Paso 6:</b> Tu objetivo es conseguir una <b>flag</b> por cada reto. El objeto <code>contract</code> te permitirá interactuar con el contrato que tiene la flag.</li>
+      <li class="list-group-item"><b>Paso 7:</b> Cuando consigas la flag deberás validarla contra el contrato <code>base</code> si quieres conseguir los puntos.</li>
+      <li class="list-group-item"><b>Paso 8:</b> Este tutorial es para que aprendas a interactuar con la plataforma y resuelvas este primer mini reto.</li>
+      <li class="list-group-item"><b>Paso 9:</b> Con <code>contract.functions</code> podrás observar todas las funciones del contrato del reto.</li>
+      <li class="list-group-item"><b>PISTA:</b> Revisa siempre todas las funciones del contrato o los contratos del reto.</li>
+      <li class="list-group-item"><b>Paso 10:</b> Observarás una función llamada <code>getFlag()</code>. Dicha función te devolverá la flag, siempre que hayas resueto el desafío. En algunos retos puede no existir dicha <code>flag</code> (habrá algo similar para conseguir tu flag).</li>
+      <li class="list-group-item"><b>Paso 11:</b> Ejecuta <code>await contract.getFlag()</code>. Verás que en este tutorial se te otorgará la flag del reto (fácil, ¿No? ;)).</li>
+      <li class="list-group-item"><b>Paso 12:</b> Ahora, validaremos la flag: <code>base.validateFlag(contract.address,"flag_obtenida")</code>. La función <code>validateFlag</code> requiere que siempre le envíemos la dirección del contrato del reto que estoy jugando y la flag obtenida. De este modo conseguiremos validar los puntos y superar el reto.</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.4;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract Interact is Ownable{
+
+    string flag;
+    
+    constructor(string memory _flag) payable {
+        flag = _flag;
+    }
+
+    function getFlag() public view returns(string memory){
+        return flag;
+    }
+
+}</code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="0">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark" form="deploy">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+      alert("Ya tienes contrato desplegado. Type contract for playing!");
+      console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        window.contract
+        console.info("type contract for playing!")
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+      }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

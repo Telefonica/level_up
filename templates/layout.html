@@ -1,0 +1,75 @@
+{% set navigation_bar = [
+  ('/', 'index', 'Home', 'bi-house-door-fill'),
+  ('/faqs', 'faqs', 'FAQs', 'bi-question-circle'),
+  ('/score', 'score', 'Score', 'bi-bar-chart-fill'),
+  ('/player', 'player', 'Player', 'bi-person-fill'),
+  ('/about', 'about', 'About', 'bi-braces')
+] -%}
+{% set active_page = active_page|default('index') -%}
+
+<!doctype html>
+<html lang="en" class="h-100">
+  <head>
+    {% block head %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>level_up! - Web3 Security WarGames - {% block title %}{% endblock %}</title>
+    {% block styles %}
+    <link href={{ url_for('static', filename='css/bootstrap.min.css') }} rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans" rel="stylesheet" >
+    <link href={{ url_for('static', filename='css/style.css') }} rel="stylesheet">
+    {% endblock %}
+    {% endblock %}
+  </head>
+
+  <body class="d-flex flex-column h-100">
+    {% block header %}
+    <header class="d-flex flex-wrap justify-content-center py-3 mb-4 mx-4 border-bottom">
+      <h3 class=" d-flex align-items-center mb-3 mb-md-0 me-md-auto text-gradient">{ level_up! : Web3 Security WarGames }</h3>
+
+      <ul class="nav nav-pills">
+        {% for href, id, caption, icon in navigation_bar %}
+        <li class="nav-item">
+          <a href={{ href|e }} {% if id == active_page %}class="nav-link link-primary" aria-current="page"{% else %}class="nav-link link-dark"{% endif %}>
+            <i class="bi {{ icon|e }}"></i> {{ caption|e }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </header>
+    {% endblock %}
+
+    <main class="flex-shrink-0 m-2">
+      <div class="container text-center">
+        {% block main %}{% endblock %}
+      </div>
+    </main>
+
+    {% block footer %}
+    <footer class="footer mt-auto mx-4 d-flex flex-wrap justify-content-between align-items-center py-3 border-top">  
+        <div class="col-md-12 d-flex align-items-center justify-content-center">
+          <span class="mb-3 mb-md-0 text-muted">Made with <span style="color: crimson;">♥</span> by <b>Ideas Locas CDO</b><br>Inspired by the <a href="https://ethernaut.openzeppelin.com" target="_blank">Ethernaut project</a> by OpenZeppelin team</span>
+        </div>
+    </footer>
+    {% endblock %}
+
+    {% block scripts %}
+    <script src={{ url_for('static', filename='js/jquery-3.6.1.min.js') }}></script>
+    <script src={{ url_for('static', filename='js/bootstrap.bundle.min.js') }}></script>
+    <script src={{ url_for('static', filename='js/ethers-5.7.2.umd.min.js') }}></script>
+    <script>
+      async function Web3Prov(){    
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        address_href = "/player?user_address=" + address;
+        document.getElementsByClassName("nav-link")[3].href = address_href;
+      }
+
+      $(Web3Prov());
+    </script>
+    {% endblock %}
+  </body>
+</html>

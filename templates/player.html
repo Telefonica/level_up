@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% set active_page = "player" %}
+{% block title %}Player{% endblock %}
+{% block main %}
+    <div class="m-2 p-2 justify-content-center">
+      <h2 class="text-gradient-2">Player stats</h2>
+
+      <p><strong>User address:</strong> {{ player.user_address }}</p>
+      <p><strong>Score:</strong> {{ player.score }}</p>
+
+      {% if player.level %}
+      <div class="d-flex my-3 p-2 justify-content-center table-responsive">
+          <table class="table table-borderless table-hover rounded-4">
+              <thead>
+                <tr>
+                  <th scope="col">Challenge</th>
+                  <th scope="col">Instance</th>
+                  <th scope="col">Score</th>
+                  <th scope="col">Flag</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for key, value in player.level.items() %}
+                  <tr>
+                    <th>{{ value.name|e }}</th>
+                    <th>{{ value.instance|e }}</th>
+                    <th>{{ value.score|e }}</th>
+                    <th>
+                      {% if value.flag %}
+                      <i class="bi bi-flag-fill"></i>
+                      {% else %}
+                      <i class="bi bi-flag"></i>
+                      {% endif %}
+                    </th>
+                  </tr>
+                  <tr>
+                {% endfor %}
+              </tbody>
+            </table>
+      </div>
+      
+      {% else %}
+      <p><strong>No hay contratos desplegados</strong></p>
+      {% endif %}
+
+    {% if player.exists_player %}
+      <button class="btn btn-danger" onclick="window.location.href='/deletePlayer'">Eliminar player</button>
+      <button class="btn btn-secondary" onclick="window.location.href='/'">Volver</button>
+
+    </div>
+    {% else %}
+    <div class="m-2 p-2 justify-content-center">
+        <p>El jugador no existe.</p>
+        <button class="btn btn-primary" onclick="window.location.href='/createPlayer'">Crear player</button>
+        <button class="btn btn-secondary" onclick="window.location.href='/'">Volver</button>
+
+    </div>
+    {% endif %}
+{% endblock %}

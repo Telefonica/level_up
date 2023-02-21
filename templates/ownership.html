@@ -1,0 +1,167 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Ownership{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>En este reto tendrás que conseguir ser el <code>Owner</code> del contrato <code>contract</code>, ¿lo puedes conseguir?</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> Fíjate en el <code>modifier onlyOwner</code>. Es una restricción que permite evitar que un usuario que no es propietario de un contrato pueda llamar a una función (que tenga dicho modificador). Si te fijas, <code>getFlag()</code> solo puede ser consultado por el propietario del contrato. Puedes saber quién es el propietario con <code>contract.owner()</code>.
+        <pre class="text-start rounded-3 mt-2"><code>modifier onlyOwner {
+  require(
+      msg.sender == owner,
+      "caller no es el owner"
+  );
+  _;
+}</code></pre>
+      </li>
+      <li class="list-group-item"><b>Paso 2:</b> Para poder participar en el reto deberás hacer algún tipo de pago (lo llamaremos contribución).</li>
+      <li class="list-group-item"><b>Paso 3:</b> ¿Qué necesitas para cambiar la propiedad? Ten cuidado con la inflación. Revisa el contrato.</li>
+      <li class="list-group-item"><b>PISTA:</b> Las funciones <code>miContribucion</code> y <code>miInflacion</code> te ayudarán a conocer el estado de las finanzas para ser propietario.</li>
+      <li class="list-group-item"><b>Paso 4:</b> Recuerda recoger tu <code>flag</code> cuando seas propietario.</li>
+      <li class="list-group-item"><b>PISTA:</b> Si pruebas más de 10 veces y no consigues premio estás cometiendo algún tipo de error.</li>
+      <li class="list-group-item"><b>Paso 5:</b> ¡No olvides validar tu <code>flag</code> para sumar tus puntos!</li>
+      <li class="list-group-item"><b>PISTA:</b> Revisa todas las funciones del contrato. Quizá encuentres alguna pista :D.</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.4;
+
+contract Ownership{
+
+    string flag;
+    uint number;
+    address public owner;
+    mapping (address => uint256) public players;
+    mapping (address => uint256) public inflacion;
+
+    
+    constructor(string memory _flag, uint _number) public {
+        flag = _flag;
+        number = _number;
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(
+            msg.sender == owner,
+            "caller no es el owner"
+        );
+        _;
+    }
+
+    function comprarPropiedad() public payable{
+        require(msg.value > 1000 ether);
+        owner = msg.sender;
+    }
+
+    function darAlta() public payable{
+        require(msg.value > 0.0000001 ether);
+        players[msg.sender] = msg.value;
+    }
+
+    function darBaja() public payable{
+        require(players[msg.sender] > 0);
+        (bool sent, ) = payable(msg.sender).call{value: players[msg.sender]}("");
+        if (sent)
+        {
+            players[msg.sender] = 0;
+        }
+        require(sent, "Error dando de baja. No se han devuelto Ethers");
+    }
+
+    function miInflacion() public view returns(uint){
+        return inflacion[msg.sender];
+    }
+
+    function miContribucion() public view returns(uint){
+        return players[msg.sender];
+    }
+
+    function miPista() public pure returns (string memory){
+        return "Debes acertar el numero de la propiedad. Entre 0 y 9";
+    }
+
+    function cambioPropiedad(uint _number) public payable {
+        require(players[msg.sender] > 0,"No has contribuido a la propiedad");
+        uint256 incremento = 100000000000000;
+        if (!(_number == number)){
+            inflacion[msg.sender] += incremento;
+        }
+        else{
+            require(inflacion[msg.sender] <= msg.value,"Adivinaste el numero de la propiedad, pero no has contribuido lo suficiente");
+            owner = msg.sender;
+        }    
+    }
+
+    function getFlag() public view onlyOwner returns(string memory){
+        return flag;
+    }
+
+}</code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="2">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        window.contract
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

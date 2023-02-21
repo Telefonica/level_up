@@ -1,0 +1,89 @@
+{
+    "1000":{
+        "name": "base.sol",
+        "constructor": 0
+    },
+    "1001":{
+        "name": "overworld.sol",
+        "constructor": 2
+    },
+    "1002":{
+        "name": "snippet.sol",
+        "constructor": 1
+    },
+    "1003":{
+        "name": "liquidity_provider.sol",
+        "constructor": 0
+    },
+    "0":{
+        "name": "interact.sol",
+        "constructor": 1,
+        "template":"interact.html",
+        "score":25,
+        "difficulty":0
+    },
+    "1":{
+        "name": "questions.sol",
+        "constructor": 1,
+        "template":"questions.html",
+        "score":50,
+        "difficulty":1
+    },
+    "2":{
+        "name": "ownership.sol",
+        "constructor": 2,
+        "template":"ownership.html",
+        "score":100,
+        "difficulty":3
+    },
+    "3":{
+        "name": "safeguarding.sol",
+        "constructor": 2,
+        "template":"safeguarding.html",
+        "score":75,
+        "difficulty":2
+    },
+    "4":{
+        "name": "origin.sol",
+        "constructor": 1,
+        "template":"origin.html",
+        "score":150,
+        "difficulty":3
+    },
+    "5":{
+        "name": "re-lottery.sol",
+        "constructor": 2,
+        "template":"relottery.html",
+        "score":250,
+        "difficulty":4
+    },
+    "6":{
+        "name": "overworld.sol",
+        "constructor": 2,
+        "template":"overworld.html",
+        "score":100,
+        "difficulty":3
+    },
+    "7":{
+        "name": "blockchain_tour.sol",
+        "constructor": 0,
+        "template":"blockchain_tour.html",
+        "difficulty":2,
+        "score":75
+    },
+    "8":{
+        "name": "snippet.sol",
+        "constructor": 3,
+        "template":"snippet_delegated.html",
+        "difficulty":4,
+        "score":200
+    },
+    "9":{
+        "name": "rich_club.sol",
+        "constructor": 2,
+        "template":"rich_club.html",
+        "difficulty":5,
+        "score":250
+    }
+
+}

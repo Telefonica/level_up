@@ -1,0 +1,18 @@
+services:
+    chain1:
+      image: trufflesuite/ganache:v7.7.4
+      ports:
+        - "8545:8545"
+      command: --wallet.accounts 0x14bc290bbd335586164e48a7feda642360714b3e5f404ed085196cc49d3a3960,0x56BC75E2D63100000
+    levelup:
+      image: levelup
+      build: .
+      ports:
+        - "5000:5000"
+      environment:
+        - NETWORK=http://chain1:8545
+        - NETWORK_NAME=ganache
+        - ADDRESS_OWNER=0xE4B98c781cA5Add4876D8C08dd11A3a0baeD7698
+        - PRIVATE_KEY=0x14bc290bbd335586164e48a7feda642360714b3e5f404ed085196cc49d3a3960
+      depends_on:
+        - "chain1"

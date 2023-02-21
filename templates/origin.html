@@ -1,0 +1,141 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Origin{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>Soy <i>Origen</i>, ¿quiero que seas tú el origen?</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> Este es el reto <code>origin</code>. Este reto pone en práctica el uso de vulnerabilidades que pueden aprovecharse en un phishing (es decir, la interacción humana).</li>
+      <li class="list-group-item"><b>Paso 2:</b> Necesitarás ser el <code>winner</code> del contrato para poder resolver el reto y poder solicitar tu <code>flag</code> a través de la función <code>getFlag()</code>.</li>
+      <li class="list-group-item"><b>Paso 3:</b> Despliega el contrato.</li>
+      <li class="list-group-item"><b>Paso 4:</b> Verás que hay 2 campos en la página del reto: <code>"Contract Address Attack"</code> y <code>"ABI Contract Attack"</code>.</li>
+      <li class="list-group-item"><b>PISTA:</b> Sí, parece que nos tocará hacer un contrato y desplegarlo sobre la blockchain dónde está corriendo la plataforma.</li>
+      <li class="list-group-item"><b>PISTA:</b> Utiliza Remix para generar el contrato y poder conectarte de manera sencilla contra la Blockchain de pruebas que estés utilizando.</li>
+      <li class="list-group-item"><b>PISTA:</b> Debes importar a tu contrato, el contrato que te damos abajo. Por ejemplo: <code>import "../origin.sol";</code> . La idea es que interactúes con él desde tu propio contrato.</li>
+      <li class="list-group-item"><b>Paso 5:</b> ¿Qué vulnerabilidad estamos trabajando? Deberías revisar el contrato y poner foco en la función <code>transfer</code>.
+        <pre class="text-start rounded-3 mt-2"><code>function transfer(address payable _to, uint _amount) public {
+    require(tx.origin == owner, "No Owner");
+    winner = msg.sender;
+
+    (bool sent, ) = _to.call{value: _amount}("");
+    require(sent, "Fallo al enviar cantidad");
+}</code></pre>
+      </li>
+      <li class="list-group-item"><b>PISTA:</b> <code>tx.origin</code></li>
+      <li class="list-group-item"><b>Paso 6:</b> Cuando implementes tu contrato que consiga convertirte en <code>Winner</code>, consigue tu dirección de contrato y el ABI (con REMIX) y pégalo en los campos que encuentras en la página del reto.</li>
+      <li class="list-group-item"><b>PISTA:</b> ¡Ánimo!</li>
+      <li class="list-group-item"><b>Paso 7:</b> Recoge tu <code>flag</code> y valídala con el contrato <code>base</code>.</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.4;
+
+contract Origin{
+
+    string flag;
+    address payable public owner;
+    address winner;
+
+    constructor(string memory _flag) public payable {
+        flag = _flag;
+        owner = payable(msg.sender);
+    }
+
+    function transfer(address payable _to, uint _amount) public {
+        require(tx.origin == owner, "No Owner");
+        winner = msg.sender;
+
+        (bool sent, ) = _to.call{value: _amount}("");
+        require(sent, "Fallo al enviar cantidad");
+    }
+
+    receive() external payable{}
+
+    function balanceTotal() public view returns(uint){
+        return address(this).balance;
+    }
+
+    function getFlag() public view returns (string memory){
+        require(address(this).balance==0,"No has conseguido el ETH");
+        require(winner == msg.sender,"No eres el winner. Usa tu smartcontract");
+        return flag;
+    }
+
+}</code></pre>
+  </div>
+
+  {% if show_verify %}
+  <form class="my-3" action="/verify_origin_attack" method="post" id="verify">
+      <label for="caddress" class="form-label">Contract Address Attack:</label>
+      <input type="text" class="form-control" id="caddress" name="caddress"> <br><br>
+      <label for="cabi" class="form-label">ABI Contract Attack:</label>
+      <input type="text" class="form-control" id="cabi" name="cabi">
+      <button type="submit" class="btn btn-light border border-dark" id="button_verify" form="verify" value="Submit">Verify contract</button>
+  </form>
+  {% endif %}
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="4">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        window.contract
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

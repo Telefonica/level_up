@@ -1,0 +1,74 @@
+{% extends "layout.html" %}
+{% block title %}Challenges{% endblock %}
+{% block main %}
+  {% if base_address %}
+    <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+            
+  <div class="d-flex my-3 p-2 justify-content-center table-responsive">
+    <table class="table table-borderless table-hover rounded-4">
+      <thead>
+        <tr>
+          <th scope="col">Level</th>
+          <th scope="col">Challenge</th>
+          <th scope="col">Difficulty</th>
+          <th scope="col">Launch</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for key, value in challenges.items() %}
+          <tr>
+            <th>{{ key|e }}</th>
+            <th>{{ value.name|e }}</th>
+            <th>
+              {% for i in range(value.difficulty) %}
+                <i class="bi bi-circle-fill" style="font-size: 0.5rem"></i>
+              {% endfor %}
+              {% for i in range(5 - value.difficulty) %}
+                <i class="bi bi-circle" style="font-size: 0.5rem"></i>
+              {% endfor %}
+            </th>
+            <th>
+              <a class="btn btn-outline-light btn-sm" href={{ value.href|e }} role="button">
+                <i class="bi bi-caret-right-fill"></i>
+              </a>
+            </th>
+          </tr>
+          <tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+
+    async function Web3Prov(){
+      const provider = new ethers.providers.Web3Provider(window.ethereum); 
+      await provider.send("eth_requestAccounts", []);
+      const address = await provider.getSigner().getAddress();
+
+      base = new ethers.Contract(
+          base_add,
+          abi,
+          provider.getSigner(0)
+      );
+
+      window.base = base;
+      window.player = address;
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego'});
+    }
+
+    $(Web3Prov());
+  </script>
+  {#
+    <script src={{ url_for('static', filename='js/index.js') }}></script>
+  #}
+{% endblock %}

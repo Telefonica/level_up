@@ -1,0 +1,108 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Blockchain Tour{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>Conozcamos un poco más sobre <code>msg.data</code> de la Blockchain.</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> Soy el reto <code>blockchain_tour</code>.</li>
+      <li class="list-group-item"><b>Paso 2:</b> En Solidity disponemos de funciones para saber qué bloque se ha utilizado para una transacción.</li>
+      <li class="list-group-item"><b>Paso 3:</b> En este reto vamos a trabajar este concepto. Fíjate en el <code>Storage</code> del contrato del reto:
+        <pre class="text-start rounded-3 mt-2"><code>string flag;
+uint public blocknumber;
+address public owner;</code></pre>
+      </li>
+      <li class="list-group-item"><b>Paso 4:</b> ¿Dónde se encuentra la flag? No existe una función llamada <code>getFlag()</code>. ¿Entonces?</li>
+      <li class="list-group-item"><b>PISTA:</b> Busca en Blockchain. Al final, todo está ahí.</li>
+      <li class="list-group-item"><b>Paso 5:</b> Cuando tengas tu <code>flag</code>, no olvides validarla contra el contrato <base>.</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.7;
+
+contract blockchain_tour{
+
+    string flag;
+    uint public blocknumber;
+    address public owner;
+
+    constructor() payable {
+        owner = msg.sender;
+    }
+
+    function set_flag(string memory _flag) public {
+        require(owner == msg.sender,"No eres el propietario del contrato");
+        flag = _flag;
+        blocknumber = block.number;
+    }
+
+}</code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="7">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        token = new ethers.Contract(contract_address_token,abi_token,provider.getSigner(0));
+        window.contract
+        window.token
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

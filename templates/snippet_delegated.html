@@ -1,0 +1,197 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Snippet Delegated{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>El intermediario peligroso. Hay que saber en quién confiar para delegar tus acciones.</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> Despliega el contrato.</li>
+      <li class="list-group-item"><b>Paso 2:</b> Hay un contrato denominado <code>functions</code>. Digamos que es una librería de funciones que otros contratos pueden utilizar.</li>
+      <li class="list-group-item"><b>Paso 3:</b> Tu puedes interactuar con tu <code>contract</code> (como siempre).</li>
+      <li class="list-group-item"><b>Paso 4:</b> El objetivo es conseguir el <code>flag</code> de <code>contract</code>.
+        <pre class="text-start rounded-3 mt-2"><code>function getFlag() public view returns(string memory){
+  require(owner == msg.sender,"No eres el propietario del contrato");
+  require(power == 9,"No tienes suficiente fuerza! Pista: de 0 a 10");
+  return snippet_flag;
+}</code></pre></li>
+      <li class="list-group-item"><b>Paso 5:</b> Parece que debes ser <code>Owner</code> y que debes tener suficiente <code>Power</code>.</li>
+      <li class="list-group-item"><b>PISTA:</b> Tienes funciones para subir y disminuir tu <code>Power</code>. ¿Dónde?</li>
+      <li class="list-group-item"><b>Paso 6:</b> Es recomendado que intentes cumplir los diferentes <code>require</code> de la función <code>getFlag()</code>. Si haces eso irás por buen camino.</li>
+      <li class="list-group-item"><b>Paso 7:</b> Revisa la función <code>execution_function</code> del contrato <code>snippet.sol</code>. </li>
+      <li class="list-group-item"><b>PISTA:</b> ¿Qué es un selector de una función? Investiga y… ¡Delega!</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>//SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.7;
+
+contract functions{
+
+    string snippet_flag;
+    address public owner;
+    int8 public power;
+    int8 stamina;
+
+    constructor(int8 _stamina){
+        snippet_flag = "flag_in_the_world";
+        power = 0;
+        stamina = _stamina;
+    }
+
+    function blocks() public view returns(uint){
+        return block.number;
+    }
+
+    function getPower() public view returns(int8){
+        return power;
+    }
+
+    function addPower() public{
+        power += 5;
+    }
+
+    function addStamina() public{
+        stamina += 1;
+    }
+
+    function delStamina() public{
+        stamina -=1 ;
+    }
+
+    function addStaminaToPower() public{
+        power += stamina;
+    }
+
+    function getFlag() private view returns(string memory){
+        require(owner == msg.sender,"No eres propietario");
+        return getFlag();
+    }
+
+    function setOwner() public{
+        owner = msg.sender;
+    }
+
+    function setSnippetFlag() public{
+        require(owner == msg.sender,"No eres propietario");
+        snippet_flag = getFlag();
+    }
+    
+
+}</code></pre>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>//SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.7;
+
+import "./functions.sol";
+
+contract Snippet{
+
+    string snippet_flag;
+    address public owner;
+    int8 public power;
+    int8 stamina;
+    functions public f;
+
+    constructor(string memory _flag, functions _f, int8 _stamina){
+        f = functions(_f);
+        power = f.getPower();
+        stamina = _stamina;
+        owner = msg.sender;
+        snippet_flag = _flag;
+    }
+
+    function getFlag() public view returns(string memory){
+        require(owner == msg.sender,"No eres el propietario del contrato");
+        require(power == 9,"No tienes suficiente fuerza! Pista: de 0 a 10");
+        return snippet_flag;
+    }
+
+    function getPower() public view returns(int8){
+        return power;
+    }
+
+    function getStamina() public view returns(int8){
+        return stamina;
+    }
+
+    function execution_function(bytes memory _data) public {
+        (bool success, bytes memory returnedData) = address(f).delegatecall(_data);
+        require(success,"Delegada no correcta");
+    }        
+
+}</code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="8">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        contract_address_functions = '{{contract_address_functions}}'
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        abi_functions = JSON.parse('{{abi_functions | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        functions = new ethers.Contract(contract_address_functions,abi_functions,provider.getSigner(0));
+        window.contract
+        window.functions
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues',
+                     functions:'Interactúa con el contrato de librerías de este reto'
+                    });
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Overworld{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>La historia del Over en <b>Smart Contracts</b></p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> Soy el reto <b>overworld</b>. En este reto se estudiarán los conceptos sobre los que intentamos llevar a los contratos a los límites.</li>
+      <li class="list-group-item"><b>Paso 2:</b> El objetivo es conseguir la <code>flag</code> (como siempre).</li>
+      <li class="list-group-item"><b>Paso 3:</b> Trabajaremos con Tokens. El <code>token</code> ILT o <b>IdeasLocas Token</b> te permite entender los conceptos básicos de un <code>token</code>. Puedes revisar el contrato del <code>token</code> más abajo.</li>
+      <li class="list-group-item"><b>Paso 4:</b> Para conseguir tu <code>flag</code> debes conseguir tener 255 tokens, ¿Podrás lograrlo?
+        <pre class="text-start rounded-3 mt-2"><code>function getFlag() public view returns(string memory){
+    require(balances[msg.sender] == 255,"No tienes suficientes tokens");
+    return flag;
+}</code></pre>
+      </li>
+      <li class="list-group-item"><b>Paso 5:</b> Puedes crear y quemar <code>tokens</code>. Solo tienes que pedirlo.
+        <pre class="text-start rounded-3 mt-2"><code>function faucet(uint8 _amount) public{
+    require(balances[msg.sender] + _amount != 255,"No puedes llegar a esa cantidad");
+    token.mint(msg.sender, _amount);
+    balances[msg.sender] += _amount;
+}</code></pre></li>
+      <li class="list-group-item"><b>Paso 6:</b> La pregunta es, ¿Te dejarán llegar a 255 tokens?</li>
+      <li class="list-group-item"><b>PISTA:</b> Por mucho que pasen los años y la tecnología, las vulnerabilidades se repiten.</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>//SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.2;
+
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.0.0/contracts/token/ERC20/ERC20.sol";
+
+contract ILT_Token is ERC20{
+
+    address public owner;
+
+    constructor (string memory name, string memory symbol) ERC20(name, symbol) public {
+        _mint(msg.sender, 100);
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(
+            msg.sender == owner,
+            "caller no es el owner"
+        );
+        _;
+    }
+
+    function mint(address _address, uint _amount) public onlyOwner{
+        _mint(_address,_amount);
+    }
+
+    function burn(address _address, uint _amount) public onlyOwner{
+        if (balanceOf(_address) - _amount <=0)
+        {
+            _burn(_address, balanceOf(_address));
+        }
+        else{
+            _burn(_address, balanceOf(_address));
+        }
+        
+    }
+
+    function changeOwner(address _address) public onlyOwner{
+        owner = _address;
+    }
+
+}</code></pre>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>//SPDX-License-Identifier: MIT
+
+pragma solidity ^0.6.2;
+
+import "./ILT_Token.sol";
+
+contract OverWorld{
+
+    ILT_Token public token;
+    mapping(address => uint8) balances;
+    string flag;
+
+    constructor(string memory _flag, ILT_Token _token) public{
+        token = _token;
+        flag = _flag;
+    }
+
+    function mytokens() public view returns(uint8){
+        return balances[msg.sender];
+    }
+
+    function faucet(uint8 _amount) public{
+        require(balances[msg.sender] + _amount != 255,"No puedes llegar a esa cantidad");
+        token.mint(msg.sender, _amount);
+        balances[msg.sender] += _amount;
+    }
+
+    function burning(uint8 _amount) public{
+        require(balances[msg.sender]+_amount != 255,"No puedes llegar a esa cantidad");
+        token.burn(msg.sender, _amount);
+        balances[msg.sender] -= _amount;
+    }
+
+    function getFlag() public view returns(string memory){
+        require(balances[msg.sender] == 255,"No tienes suficientes tokens");
+        return flag;
+    }
+
+}</code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="6">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        contract_address_token = '{{contract_address_token}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        abi_token = JSON.parse('{{abi_token | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        token = new ethers.Contract(contract_address_token,abi_token,provider.getSigner(0));
+        window.contract
+        window.token
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

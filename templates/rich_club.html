@@ -1,0 +1,218 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Rich Club{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>El club de los ricos.</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> Despliega el contrato.</li>
+      <li class="list-group-item"><b>Paso 2:</b> Este reto tiene varios contratos: <code>rich_club.sol</code> y <code>liquidity_provider.sol</code>.</li>
+      <li class="list-group-item"><b>Paso 3:</b> La idea es trabajar el concepto de <b>flash loan</b>.</li>
+      <li class="list-group-item"><b>Paso 4:</b> Solicita liquidez a tu <code>provider</code>. Se generarán tokens para ti.</li>
+      <li class="list-group-item"><b>Paso 5:</b> ¿Tendrás suficientes tokens para conseguir tu flag?
+        <pre class="text-start rounded-3 mt-2"><code>modifier onlyRichPeople() {
+  require(
+    token.balanceOf(msg.sender) > 10 ** 18,
+    "You are not rich enough"
+  );
+  _;
+}</code></pre>
+      <pre class="text-start rounded-3 mt-2"><code>function getFlag() public onlyRichPeople returns (string memory) {
+  return flag;
+}</code></pre>
+      </li>
+      <li class="list-group-item"><b>Paso 6:</b> Todo préstamo tiene una consecuencia. Los fondos no son para siempre. </li>
+      <li class="list-group-item"><b>PISTA:</b> Revisa esta función. El secreto está aquí:
+        <pre class="text-start rounded-3 mt-2"><code>function flashLoan(
+  address _to,
+  uint256 _amount
+) public isRepaidOnly returns (bool) {
+  require(_to != address(0), "only owner can mint");
+
+  _mint(_to, _amount);
+
+  loan = _amount;
+  IFlashLoanReceiver(_to).executeOperation(address(this), _amount);
+
+  return true;
+}</code></pre>
+      </li>
+      <li class="list-group-item"><b>Paso 7:</b> Como decíamos, todo tiene una consecuencia. Hay que pagar las deudas.
+        <pre class="text-start rounded-3 mt-2"><code>function repayLoan(uint _amount) public {
+  require(loan > 0, "You must have a loan to repay");
+  require(_amount == loan, "You must repay the exact amount of the loan");
+  require(
+    balanceOf(msg.sender) >= _amount,
+    "You must have enough tokens to repay the loan"
+  );
+
+  _burn(msg.sender, _amount);
+  loan = 0;
+}</code></pre></li>
+      <li class="list-group-item"><b>Paso 8:</b> Tenemos que saber que hay que hacer un contrato para poder generar la lógica necesaria y conseguir la <code>flag</code>.</li>
+      <li class="list-group-item"><b>Paso 9:</b> Copia los contratos <code>rich_club.sol</code> y <code>liquidity_provider.sol</code> a tu entorno de desarrollo, por ejemplo Remix. </li>
+      <li class="list-group-item"><b>Paso 10:</b> Genera tu contrato:
+        <pre class="text-start rounded-3 mt-2"><code>contract Solution is IFlashLoanReceiver {
+    string public flag;
+    address public owner;
+    LiquidityProvider private token;
+    RichClub private richClub;
+…
+
+}</code></pre></li></li>
+      <li class="list-group-item"><b>Paso 11:</b> Implementa las funciones necesarias para interactuar con <code>rich_club</code> y <code>liquidity_provider</code> de forma que puedas conseguir tu <code>flag</code>.</li>
+      <li class="list-group-item"><b>Paso 12:</b> Cuando consigas tu <code>flag</code> valídala con el contrato <code>base</code>.</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.9;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+contract RichClub {
+  string private flag;
+  IERC20 private token;
+
+  modifier onlyRichPeople() {
+    require(
+      token.balanceOf(msg.sender) > 10 ** 18,
+      "You are not rich enough"
+    );
+    _;
+  }
+
+  constructor(string memory _flag, IERC20 _token) {
+    flag = _flag;
+    token = _token;
+  }
+
+  function getFlag() public onlyRichPeople returns (string memory) {
+    return flag;
+  }
+}</code></pre>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.9;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+
+interface IFlashLoanReceiver {
+  function executeOperation(address token, uint256 amount) external;
+}
+
+contract LiquidityProvider is ERC20, ERC20Burnable {
+  uint256 public loan;
+
+  modifier isRepaidOnly() {
+    _;
+    require(loan == 0, "You must repay the loan first");
+  }
+
+  constructor() ERC20("IdeasLocas_Token", "ILT") {}
+
+  function mint(address _to, uint256 _amount) public payable {
+    require(_to != address(0), "only owner can mint");
+    require(msg.value == _amount * (1 ether), "Price per token is 1 ETH");
+    _mint(_to, _amount);
+  }
+
+  function flashLoan(
+    address _to,
+    uint256 _amount
+  ) public isRepaidOnly returns (bool) {
+    require(_to != address(0), "only owner can mint");
+
+    _mint(_to, _amount);
+
+    loan = _amount;
+    IFlashLoanReceiver(_to).executeOperation(address(this), _amount);
+
+    return true;
+  }
+
+  function repayLoan(uint _amount) public {
+    require(loan > 0, "You must have a loan to repay");
+    require(_amount == loan, "You must repay the exact amount of the loan");
+    require(
+      balanceOf(msg.sender) >= _amount,
+      "You must have enough tokens to repay the loan"
+    );
+
+    _burn(msg.sender, _amount);
+    loan = 0;
+  }
+}</code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="9">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        contract_address_token = '{{contract_address_token}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        abi_token = JSON.parse('{{abi_token | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        token = new ethers.Contract(contract_address_token,abi_token,provider.getSigner(0));
+        window.contract
+        window.token
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues',
+                     token:'Observa el Token de este reto'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

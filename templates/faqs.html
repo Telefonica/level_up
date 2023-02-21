@@ -1,0 +1,55 @@
+{% extends "challenge.html" %}
+{% set active_page = "faqs" %}
+{% block title %}FAQs{% endblock %}
+{% block main %}
+  <h2 class="text-gradient-2">Frequently Asked Questions</h2>
+
+  <div class="m-2 p-2 justify-content-center">
+    <p>En esta sección se responde a las principales preguntas...</p>
+  </div>
+
+  <div class="d-flex justify-content-center">
+    <div class="accordion" id="accordionFAQs">
+      <div class="accordion-item ">
+        <h2 class="accordion-header" id="headingOne">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+            <strong>¿Cómo me conecto?</strong>
+          </button>
+        </h2>
+        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFAQs">
+          <div class="accordion-body">
+            </p>Puedes utilizar un Wallet que te permita conectar a una Blockchain. Te recomendamos utilizar Metamask, el cual necesitas tener instalado en tu navegador cuando interactúes con <b><i>level_up!</i></b> Utilizando Metamask podrás conectarte e importar una cuenta de pruebas con la Blockchain que estés jugando (recomendamos utilizar una Blockchain de pruebas tipo Ganache o Hardhat).</p>
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingTwo">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+            <strong>¿Cómo me registro en el juego?</strong>
+          </button>
+        </h2>
+        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionFAQs">
+          <div class="accordion-body">
+            <p>Se debe ir al apartado <b>“Player”</b>. En este apartado se podrá encontrar un botón que indique <b>“Crear Player”</b>. Este botón vinculará el usuario (la dirección pública) con el contrato que gestiona el CTF. De esta forma se dará de alta al jugador en la plataforma y podrá llevar a cabo el despliegue de los diferentes retos y empezar a contabilizar sus puntuaciones.</p>
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingThree">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+            <strong>¿Cómo juego?</strong>
+          </button>
+        </h2>
+        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionFAQs">
+          <div class="accordion-body">
+            <p>En primer lugar, deberemos desplegar un reto (una vez me haya dado de alta en la plataforma con una dirección pública con Metamask, por ejemplo). Una vez el reto está desplegado, debemos leer el enunciado y los pasos que podemos encontrar en la página del reto. Tendremos que hacer uso de la consola de desarrolladores a través de las <i>‘Dev Tools’</i> del navegador.</p>
+
+            <p>Cuando resuelva un reto, debo obtener una flag. Una vez tenga la flag tengo que validarla contra el contrato base. El contrato base se encarga de gestionar jugadores y retos en la plataforma. Desde la consola de desarrolladores del navegador deberé ejecutar <code>base.validateFlag(‘dirección contrato reto’,’valor de la flag’)</code>. Si la flag es correcta, se sumarán puntos a mi player.</p>
+
+            <p>Se pueden ver las puntuaciones obtenidas desde la pantalla <b>Player</b>. Además, se puede ver la puntuación global de todos los jugadores desde la vista <b>Score</b>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

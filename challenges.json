@@ -1,0 +1,62 @@
+{
+    "0":{
+        "name": "Interact",
+        "href":"interact",
+        "difficulty":0,
+        "score":25
+    },
+    "1":{
+        "name": "Questions",
+        "href":"questions",
+        "difficulty":1,
+        "score":50
+    },
+    "2":{
+        "name": "Ownership",
+        "href":"ownership",
+        "difficulty":3,
+        "score":100
+    },
+    "3":{
+        "name": "Safeguarding",
+        "href":"safeguarding",
+        "difficulty":2,
+        "score":75
+    },
+    "4":{
+        "name": "Origin",
+        "href":"origin",
+        "difficulty":3,
+        "score":150
+    },
+    "5":{
+        "name": "Relottery",
+        "href":"relottery",
+        "difficulty":4,
+        "score":250
+    },
+    "6":{
+        "name": "Overworld",
+        "href":"overworld",
+        "difficulty":3,
+        "score":100
+    },
+    "7":{
+        "name": "Blockchain_Tour",
+        "href":"blockchain_tour",
+        "difficulty":2,
+        "score":75
+    },
+    "8":{
+        "name": "Snippet_Delegated",
+        "href":"snippet_delegated",
+        "difficulty":4,
+        "score":200
+    },
+    "9":{
+        "name": "Rich_Club",
+        "href":"rich_club",
+        "difficulty":5,
+        "score":250
+    }
+}

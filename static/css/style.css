@@ -1,0 +1,67 @@
+:root {
+  /* violet */
+  --primary-color: 111, 76, 255;
+  
+  /* white */
+  --text-color: 255, 255, 255;
+}
+
+body {
+    font-family: 'Fira Sans', serif;
+    background: linear-gradient(139.73deg, #e6fdff, #f3efff);
+    background-size: auto;
+    color: var(--text-color);
+    padding: 1rem;
+    text-align: center;
+}
+
+table {
+    background: linear-gradient(#54b9a2, #265a5a);
+    color: rgba(var(--text-color)) !important;
+    width: 75% !important;
+}
+
+table a {
+  color: rgba(var(--text-color)) !important;
+}
+
+.accordion {
+    width: 75% !important;
+}
+
+.text-gradient {
+    background: linear-gradient(to right, #bb36b5, #236ebc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-2 {
+    background: linear-gradient(to right, #e71f7f, #10eab2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.btn-custom {
+    font-size: 14px;
+    margin: 1rem;
+    transition: all 0.3s ease;
+    border-radius: 50px;
+}
+
+.btn-custom:hover {
+    transition: all 0.3s ease;
+}
+
+.btn-glow:hover {
+    box-shadow: rgba(var(--primary-color), 0.5) 0px 0px 20px 0px;
+    color: rgba(var(--text-color), 0.5);
+}
+
+/* https://sushi.com/ */
+.btn-gradient-border {
+    color: rgba(var(--text-color));
+    border: 2px double transparent;
+    background-image: linear-gradient(rgb(13, 14, 33), rgb(13, 14, 33)), radial-gradient(circle at left top, rgb(1, 110, 218), rgb(217, 0, 192));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+}

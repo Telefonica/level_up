@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block title %}Create player{% endblock %}
+{% block main %}
+  <div class="m-2 p-2 justify-content-center">
+    <p>Creating player...</p>
+  </div>
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    async function crearPlayer() {
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+        const base_address = '{{base_address}}';
+        const base_abi = JSON.parse('{{abi_base | tojson | safe}}');
+        const c = new ethers.Contract(base_address,base_abi,provider.getSigner());
+        console.log("Añadiendo player!");
+        window.contr = c;
+
+        try {
+            await c.addPlayer();
+            console.info("Añadido!");
+            alert("Añadido!");
+            window.location.pathname = "/";
+        }
+        catch(error) {
+            console.log("Ya registrado");
+            console.error(error);
+        }
+    }
+
+    $(crearPlayer());
+  </script>
+{% endblock %}

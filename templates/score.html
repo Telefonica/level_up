@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% set active_page = "score" %}
+{% block title %}Score{% endblock %}
+{% block main %}
+  <h2 class="text-gradient-2">Global scoreboard</h2>
+
+  <div class="d-flex my-3 p-2 justify-content-center table-responsive">
+    {% if score["error"] == "HTTPConnectionPool" %}
+      <p class="text-center">blockchain connection error...</p>
+    {% elif score == {} %}
+      <p class="text-center">No scores yet!</p>
+    {% else %}
+      <table class="table table-borderless table-hover rounded-4">
+        <thead>
+          <tr>
+            <th scope="col">Rank</th>
+            <th scope="col">Address</th>
+            <th scope="col">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, value in score.items() %}
+            <tr>
+              <th>{{ loop.index }}</th>
+              <th>{{ key|e }}</th>
+              <th>{{ value|e }}</th>
+            </tr>
+            <tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+{% endblock %}

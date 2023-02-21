@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% set active_page = "about" %}
+{% block title %}About{% endblock %}
+{% block main %}
+  <h2 class="text-gradient-2">About this project...</h2>
+  <div class="m-2 p-2 justify-content-center">
+    <img src={{ url_for('static', filename='img/blockchain.jpeg') }} class="rounded-4 mx-auto mb-2 d-block" height="200">
+    <p><i>Ilustración generada con Stable Diffusion</i></p>
+    <p><b>level_up!</b> ha sido creado por el equipo de IdeasLocas. Un equipo de pre-innovación del área CDO de Telefónica.</p>
+    <p><b>level_up!</b> es una plataforma de aprendizaje en Smart Contracts y Web3 a través de la resolución de diferentes retos. La plataforma presenta Gamificación, ya que permite obtener puntos y competir contra otros usuarios.</p>
+    <p>El objetivo de <b>level_up!</b> es el de facilitar el aprendizaje en un nuevo mundo disruptor. Recomendamos utilizarlo siempre en un entorno de pruebas, ya que está diseñado e implementado para funcionar en un entorno de pruebas. No recomendamos utilizarlo en una Blockchain de producción o real (dónde las transacciones cuesten dinero real y no nos hacemos responsables de dicho uso o de un mal uso de la plataforma).</p>
+    <p>¡Gracias por probar y utilizar la plataforma!</p>
+  </div>
+{% endblock %}
