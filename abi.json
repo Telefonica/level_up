@@ -2000,6 +2000,94 @@
                     "type": "function"
                 }
             ]
+        },
+        "10": {
+            "abi":[
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "_minimunFee",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "string",
+                            "name": "_flag",
+                            "type": "string"
+                        },
+                        {
+                            "internalType": "address[5]",
+                            "name": "_tableOfWinners",
+                            "type": "address[5]"
+                        }
+                    ],
+                    "stateMutability": "nonpayable",
+                    "type": "constructor"
+                },
+                {
+                    "inputs": [],
+                    "name": "getFlag",
+                    "outputs": [
+                        {
+                            "internalType": "string",
+                            "name": "",
+                            "type": "string"
+                        }
+                    ],
+                    "stateMutability": "payable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "_position",
+                            "type": "uint256"
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "_winner",
+                            "type": "address"
+                        }
+                    ],
+                    "name": "makeMeWinner",
+                    "outputs": [],
+                    "stateMutability": "payable",
+                    "type": "function"
+                },
+                {
+                    "inputs": [],
+                    "name": "minimunFee",
+                    "outputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "",
+                            "type": "uint256"
+                        }
+                    ],
+                    "name": "tableOfWinners",
+                    "outputs": [
+                        {
+                            "internalType": "address",
+                            "name": "",
+                            "type": "address"
+                        }
+                    ],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ]
         }
 
 }

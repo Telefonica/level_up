@@ -58,5 +58,11 @@
         "href":"rich_club",
         "difficulty":5,
         "score":250
+    },
+    "10":{
+        "name": "Deny_To_Me",
+        "href":"deny",
+        "difficulty":4,
+        "score":200
     }
 }

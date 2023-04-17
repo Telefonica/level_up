@@ -241,6 +241,10 @@ def blockchain_tour():
 def rich_club():
     return render_template("rich_club.html", base_address=base_address, abi_base=abi_base, network=network)
 
+@DAPP.route("/deny", methods=['GET'])
+def deny():
+    return render_template("deny.html", base_address=base_address, abi_base=abi_base, network=network)
+
 # ===================
 
 # Lógica deploys contracts
@@ -1282,6 +1286,101 @@ def deploy_rich_club():
 
 
 
+
+@DAPP.route("/deploy_deny", methods=['POST'])
+def deploy_deny():
+    if request.method == 'POST':
+        if request.form.get('user_address') and request.form.get('level'):
+            user_address = request.form.get('user_address')
+            user_address = w3.toChecksumAddress(user_address)
+            level = request.form.get('level')
+            print("user_address {} and level {}".format(user_address, level))
+
+            # Chequeamos si usuario / player existe
+            exist_player = base.functions.existPlayer(user_address).call()
+            # return "player good!"
+
+            if exist_player:
+                # Creamos contrato
+                bytecode = Functions.get_instance().get_bytecode_level(level)
+                abi = Functions.get_instance().get_abi_level(level)
+
+                if (bytecode and abi):
+                    if not Functions.get_instance().user_hash_level(network_name, level, user_address):
+                        # Desplegamos el contrato deny
+                        contract = w3.eth.contract(abi=abi, bytecode=bytecode)
+                        nonce = w3.eth.getTransactionCount(address_owner)
+                        param = Functions.get_instance().give_me_value()
+                        print("flag: {}".format(param))
+                        minimunFee = Functions.get_instance().give_me_params(level)
+
+                        transaction = contract.constructor(minimunFee, param, [address_owner,address_owner,address_owner,address_owner,address_owner]).buildTransaction(
+                            {"chainId": chainid, "gasPrice": w3.eth.gas_price, "from": address_owner, "nonce": nonce})
+
+                        # firmar transacción
+                        sign_transaction = w3.eth.account.sign_transaction(
+                            transaction, private_key=private_key)
+
+                        # recibo (se espera por ello)
+                        receipt = w3.eth.wait_for_transaction_receipt(
+                            w3.eth.send_raw_transaction(sign_transaction.rawTransaction))
+
+                        # Mostrar el contract address del contrato
+                        contract_address = receipt.contractAddress
+                        print("Contract address deployed: {}".format(
+                            contract_address))
+
+                        try:
+                            nonce = w3.eth.getTransactionCount(address_owner)
+                            transaction = base.functions.addContract(contract_address, user_address, int(level), param).buildTransaction(
+                                {"chainId": chainid, "gasPrice": w3.eth.gas_price, "from": address_owner, "nonce": nonce})
+                            print("param: {}".format(param))
+
+                            sign_transaction = w3.eth.account.sign_transaction(
+                                transaction, private_key=private_key)
+
+                            receipt = w3.eth.wait_for_transaction_receipt(
+                                w3.eth.send_raw_transaction(sign_transaction.rawTransaction))
+
+                            if not level in contract_addresses[network_name].keys():
+                                contract_addresses[network_name][level] = []
+
+                            contract_addresses[network_name][level].append(
+                                {'contract_address': contract_address, 'user_address': user_address})
+
+                            Functions.get_instance().set_contract_address_file(contract_addresses)
+                            print("updated contract-addresses.json")
+
+                        except Exception as e:
+                            print(e)
+                            return "{}".format(e)
+
+                        return render_template("deny.html", base_address=base_address, abi_base=abi_base, network=network, contract_address=contract_address, abi_address=abi)
+
+                    else:
+                        print("{} ya tiene level {} desplegado".format(
+                            user_address, level))
+                        contract_address = Functions.get_instance().give_me_contract_address(
+                            network_name, level, user_address)
+                        contract = w3.eth.contract(
+                            abi=abi, address=contract_address)
+
+                        return render_template("deny.html", base_address=base_address, abi_base=abi_base, network=network, contract_address=contract_address, abi_address=abi, error=True, msg="Ya tienes un contrato de este level desplegado")
+
+                else:
+                    return ("error con bytecode o ABI")
+
+            else:
+                print("No existe player {}".format(user_address))
+                return render_template("create_player.html", base_address=base_address, network=network, abi_base=abi_base)
+
+        else:
+            return "No se ha enviado el user_address ni el level del reto"
+
+
+
+
+
 @DAPP.route("/verify_origin_attack", methods=['POST'])
 def verify_origin_attack():
     if request.method == 'POST':
@@ -1347,6 +1446,8 @@ def deploy():
                     return redirect(url_for('deploy_snippet_delegated'), code=307)
                 elif int(level) == 9:
                     return redirect(url_for('deploy_rich_club'), code=307)
+                elif int(level) == 10:
+                    return redirect(url_for('deploy_deny'), code=307)
             else:
                 return redirect(url_for('createPlayer'))
         else:

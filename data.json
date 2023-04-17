@@ -84,6 +84,13 @@
         "template":"rich_club.html",
         "difficulty":5,
         "score":250
+    },
+    "10":{
+        "name": "deny.sol",
+        "constructor": 3,
+        "template":"deny.html",
+        "difficulty":4,
+        "score":200
     }
 
 }

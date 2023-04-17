@@ -1,0 +1,146 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Deny{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>En este reto debes trabajar el concepto de <code>DoS</code> en el contrato <code>contract</code>, ¿lo puedes conseguir?</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> En este reto vamos a trabajar el concepto de las <code>denegaciones de servicio</code> o <code>DoS</code> en Smart Contracts, aqui solo vamos a ver una de las muchas maneras en las que esta <b>vulnerabilidad</b> puede afectar a un Smart Contract. <b>Despliega el contrato</b>.
+      </li>
+      <li class="list-group-item"><b>Paso 2:</b> Este reto contiene solo el <code>DenyToMe.sol</code> y consiste en denegar el servicio de este contrato.</li>
+      <li class="list-group-item"><b>Paso 3:</b> Existen 2 funciones principales <code>makeMeWinner(uint,address)</code> y <code>tableofWinners(uint index)</code>, ademas de <code>getFlag()</code> que nos devuelve la flag si logramos resolver el reto.</li>
+      <li class="list-group-item"><b>Paso 4:</b> La idea general de este contrato es la de tener una tabla de <b>5</b> ganadores a la que solo se puede acceder llamando a la función <code>makeMeWinner()</code> pagando un <code><b>minumunFee</b></code> (puedes ver el valor de este <b>fee</b> llamando a la función <code>minimunFee()</code>), al añadir un nuevo <code>_"winner"_</code> a la tabla se le transferirá a este el <code>minimunFee()</code> pagado.</li>
+      <li class="list-group-item"><b>Paso 5:</b> Deberás denegar el servicio a esta función para poder resolver el reto.</li>
+      <li class="list-group-item"><b>PISTA:</b> Debes crearte un contrato <b>"custom"</b> para poder resolver el reto.</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-License-Identifier: MIT
+        pragma solidity ^0.8.9;
+
+        contract DenyToMe {
+            string private flag;
+            uint256 public minimunFee;
+            address[5] public tableOfWinners;
+        
+            modifier onlyWinners(){
+                bool isWinner = false;
+                for(uint i = 0; i < tableOfWinners.length; i++){
+                    if(tableOfWinners[i] == msg.sender){
+                        isWinner = true;
+                        break;
+                    }
+                }
+                require(isWinner, "You are not a winner");
+                _;
+            }
+        
+            constructor(uint256 _minimunFee, string memory _flag, address[5] memory _tableOfWinners) {
+                flag = _flag;
+                minimunFee = _minimunFee;
+                tableOfWinners = _tableOfWinners;
+            }
+        
+            /**
+             * @dev Function to set the caller of the function as a winner
+             *      in the table of winners
+             * @param _winner address of the winner
+             * @param _position position desired in the table
+             * @notice YOU MUST PAY (minimunFeee) ethers
+             */
+            function makeMeWinner(uint256 _position, address _winner) payable public {
+                require(msg.value == minimunFee, "You must pay the minimun fee");
+                require(_position > 0 && _position <= tableOfWinners.length, "You must choose a valid position");
+                
+                address lastWinner = tableOfWinners[_position-1];
+                tableOfWinners[_position-1] = _winner;
+                
+                bool sent = payable(lastWinner).send(msg.value);
+                require(sent, "Failed to send Ether");
+            }
+        
+            function isDeniedService() internal returns(bool){
+                bool isContractDenied;
+                // reverse traverse the table of winners
+                for(uint i = tableOfWinners.length; i > 0; i--){
+                    address winner = tableOfWinners[i-1];
+                    bool sent = payable(winner).send(minimunFee);
+                    isContractDenied = isContractDenied || !sent;
+                }
+        
+                return isContractDenied;
+            }
+        
+            function getFlag() public payable onlyWinners returns(string memory){
+                require(msg.value == minimunFee*tableOfWinners.length, "You must pay the minimun fee");
+                require(isDeniedService(), "Contract has service has not been denied");
+                return flag;
+            }
+        }
+
+}</code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="10">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        window.contract
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}
