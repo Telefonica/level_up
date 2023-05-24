@@ -15,9 +15,8 @@ def generate_flag():
     return str(random.getrandbits(128))
 
 
-def generate_number():
-    return random.randrange(10)
-
+def generate_number(n):
+    return random.randrange(n)
 
 def generate_number_5digits():
     return random.randrange(99999)
@@ -87,7 +86,7 @@ class Functions:
 
     def give_me_params(self, level):
         if int(level) == 2:
-            return generate_number()
+            return generate_number(10)
 
         if int(level) == 3:
             return "secret"
@@ -96,10 +95,13 @@ class Functions:
             return generate_number_5digits()
         
         if int(level) == 8:
-            return generate_number()
+            return generate_number(10)
         
         if int(level) == 10:
-            return generate_number()
+            return generate_number(10)
+        
+        if int(level) == 11:
+            return generate_number(5)
 
     def give_me_value(self):
         return generate_flag()

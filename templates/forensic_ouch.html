@@ -1,0 +1,166 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Forensic Ouch!{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>Conozcamos un poco más sobre <code>funciones invocadas en un SmartContract</code> y su rastro en la blockchain.</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> Soy el reto <code>forensic_ouch!</code></li>
+      <li class="list-group-item"><b>Paso 2:</b> En Solidity tenemos funciones que permiten identificar el bloque que estamos utilizando.</li>
+      <li class="list-group-item"><b>Paso 3:</b> Este reto nos permite hacer un forense sobre qué acciones ha realizado un SmartContract. Fíjate:
+        <pre class="text-start rounded-3 mt-2"><code>function jump() public onlyOwner {
+    blockNumber = block.number;
+}
+  
+function loveisintheair() public onlyOwner {
+    blockNumber = block.number;
+}
+
+function gameover() public onlyOwner {
+    blockNumber = block.number;
+}
+
+function ideaslocas() public onlyOwner {
+    blockNumber = block.number;
+}
+
+function team() public onlyOwner {
+    blockNumber = block.number;
+}</code></pre>
+      </li>
+      <li class="list-group-item"><b>Paso 4:</b> ¿<code>Adivinas</code> qué se ha utilizado?</li>
+      <li class="list-group-item"><b>PISTA:</b> Saca el rastro forense con tu <code>conexión</code> a la blockchain.</li>
+      <li class="list-group-item"><b>Paso 5:</b> Cuando tengas tu <code>flag</code>, no olvides validarla contra el contrato <base>.</li>
+      <li class="list-group-item"><b>PISTA:</b> Keccak es un algoritmo de hashing. Piensa que con 4 bytes puedes identificar una función...</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>//SPDX-License-Identifier: MIT
+
+  pragma solidity ^0.8.17;
+  
+  contract forensic_ouch{
+  
+      mapping(uint => string) private options;
+      mapping(uint => string) private names;
+      string private flag;
+      uint private number;
+      address public owner;
+      uint public blockNumber;
+  
+      modifier onlyOwner {
+          require(msg.sender == owner, "No eres el propietario");
+          _;
+      }
+      
+      constructor(string memory _flag, uint _number, string[] memory _list, string[] memory _names) {
+          flag = _flag;
+          number = _number;
+          owner = msg.sender;
+          uint counter = _list.length;
+          for (uint i=0; i < counter; i++){
+              options[i] = _list[i];
+              names[i] = _names[i];
+          }
+      }
+  
+      function jump() public onlyOwner {
+          blockNumber = block.number;
+      }
+  
+      function loveisintheair() public onlyOwner {
+          blockNumber = block.number;
+      }
+  
+      function gameover() public onlyOwner {
+          blockNumber = block.number;
+      }
+  
+      function ideaslocas() public onlyOwner {
+          blockNumber = block.number;
+      }
+  
+      function team() public onlyOwner {
+          blockNumber = block.number;
+      }
+  
+      function nostradamus(string memory _option, string memory _name) public {
+          require(keccak256(abi.encodePacked(_option)) == keccak256(abi.encodePacked(options[number])),"Sigue haciendo de forense...");
+          require(keccak256(abi.encodePacked(_name)) == keccak256(abi.encodePacked(names[number])),"Sigue haciendo de forense, te falta el nombre...");
+          owner = msg.sender;
+      }
+  
+      function getFlag() public view onlyOwner returns(string memory) {
+          return(flag);
+      }
+  
+      
+  }
+      </code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="11">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        token = new ethers.Contract(contract_address_token,abi_token,provider.getSigner(0));
+        window.contract
+        window.token
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

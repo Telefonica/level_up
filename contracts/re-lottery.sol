@@ -1,5 +1,6 @@
-//SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: © 2023 Telefónica Digital España S.L.
 
+// SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.4;
 
 contract Lottery{

