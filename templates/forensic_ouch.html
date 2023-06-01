@@ -148,9 +148,7 @@ function team() public onlyOwner {
         contract_address = '{{contract_address}}';
         abi_address = JSON.parse('{{abi_address | tojson | safe}}');
         contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
-        token = new ethers.Contract(contract_address_token,abi_token,provider.getSigner(0));
         window.contract
-        window.token
         console.info("type contract for playing!")
         {% endif %}
     }

@@ -1,0 +1,161 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Replay Me!{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>Bienvenido al reto <code>replay me attack</code> dónde estudiaremos la importancia de validar firmas y no reutilizarlas.</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> Soy el reto <code>replay me!</code></li>
+      <li class="list-group-item"><b>Paso 2:</b> Las firmas son fundamentales para identificar qué usuario hay detrás de una petición.</li>
+      <li class="list-group-item"><b>Paso 3:</b> En solidity existe la función ecrecover para validar firmas. Fíjate:
+        <pre class="text-start rounded-3 mt-2"><code>function deposit(
+    bytes32 _hashedMessage,
+    uint8 _v,
+    bytes32 _r,
+    bytes32 _s
+) public payable {
+    address depositer = _verifyMessage(_hashedMessage, _v, _r, _s);
+    require(depositer != address(0), "Not a valid signature");
+
+    balances[depositer] += msg.value;
+    blockNumber = block.number;
+}
+
+}</code></pre>
+      </li>
+      <li class="list-group-item"><b>Paso 4:</b> ¿Cómo se puede reutilizar una firma? ¿Dónde se encuentra?</li>
+      <li class="list-group-item"><b>PISTA:</b> Saca el rastro forense con tu <code>conexión</code> a la blockchain.</li>
+      <li class="list-group-item"><b>Paso 5:</b> Revisa bien la función <code>getFlag()</code> nos dará mucha información de lo que necesitamos hacer. </li>
+      <li class="list-group-item"><b>Paso 6:</b> La función <code>_verifyMessage</code> puede ser importante. Es capaz de decirnos quién ha firmado un mensaje. </li>
+      <li class="list-group-item"><b>PISTA:</b> Si se complica el uso de la consola... quizá te interese usar Remix IDE para interactuar.</li>
+      <li class="list-group-item"><b>Paso 7:</b> No te olvides de <code>validar tu flag</code> cuando consigas resolver el reto</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-FileCopyrightText: © 2023 Telefónica Digital España S.L.
+
+// SPDX-License-Identifier: AGPL-3.0-or-later
+pragma solidity ^0.8.9;
+
+contract ReplayMe {
+
+    string private flag;
+    mapping(address => uint) public balances;
+    uint public blockNumber;
+
+    constructor(string memory _flag){
+        flag = _flag;
+    }
+
+    function deposit(
+        bytes32 _hashedMessage,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) public payable {
+        address depositer = _verifyMessage(_hashedMessage, _v, _r, _s);
+        require(depositer != address(0), "Not a valid signature");
+
+        balances[depositer] += msg.value;
+        blockNumber = block.number;
+    }
+
+    function extractFunds(
+        bytes32 _hashedMessage,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) public payable {
+        address extractor = _verifyMessage(_hashedMessage, _v, _r, _s);
+        require(extractor != address(0), "Not a valid signature");
+
+        uint amount = balances[extractor];
+        balances[extractor] = 0;
+        payable(extractor).transfer(amount);
+    }
+
+    function _verifyMessage(
+        bytes32 _hashedMessage,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) public pure returns (address) {
+        address signer = ecrecover(_hashedMessage, _v, _r, _s);
+        return signer;
+    }
+
+    function getFlag() public view returns(string memory) {
+        require(address(this).balance == 0, "Contract not exploited");
+        return flag;
+    }
+}
+        
+        
+        
+        
+      </code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="12">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        window.contract
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

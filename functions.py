@@ -14,7 +14,6 @@ import random
 def generate_flag():
     return str(random.getrandbits(128))
 
-
 def generate_number(n):
     return random.randrange(n)
 
@@ -102,7 +101,10 @@ class Functions:
         
         if int(level) == 11:
             return generate_number(5)
-
+        
+        if int(level) == 12:
+            return generate_flag()
+            
     def give_me_value(self):
         return generate_flag()
 

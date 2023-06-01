@@ -13,6 +13,7 @@ import json
 
 from flask import Flask, request, render_template, redirect, url_for
 from web3 import Web3
+from eth_account.messages import encode_defunct
 
 from functions import Functions
 
@@ -258,6 +259,10 @@ def deny():
 @DAPP.route("/forensic_ouch", methods=['GET'])
 def forensic_ouch():
     return render_template("forensic_ouch.html", base_address=base_address, abi_base=abi_base, network=network)
+
+@DAPP.route("/replay_me", methods=['GET'])
+def replay_me():
+    return render_template("replay_me.html", base_address=base_address, abi_base=abi_base, network=network)
 
 # ===================
 
@@ -1511,6 +1516,133 @@ def deploy_forensic_ouch():
 
 
 
+@DAPP.route("/deploy_replay_me", methods=['POST'])
+def deploy_replay_me():
+    if request.method == 'POST':
+        if request.form.get('user_address') and request.form.get('level'):
+            user_address = request.form.get('user_address')
+            user_address = w3.toChecksumAddress(user_address)
+            level = request.form.get('level')
+            print("user_address {} and level {}".format(user_address, level))
+
+            # Chequeamos si usuario / player existe
+            exist_player = base.functions.existPlayer(user_address).call()
+            # return "player good!"
+
+            if exist_player:
+                # Creamos contrato
+                bytecode = Functions.get_instance().get_bytecode_level(level)
+                abi = Functions.get_instance().get_abi_level(level)
+
+                if (bytecode and abi):
+                    if not Functions.get_instance().user_hash_level(network_name, level, user_address):
+                        # Desplegamos el contrato forensic_ouch
+                        contract = w3.eth.contract(abi=abi, bytecode=bytecode)
+                        nonce = w3.eth.getTransactionCount(address_owner)
+                        param = Functions.get_instance().give_me_value()
+                        print("flag: {}".format(param))
+
+                        transaction = contract.constructor(param).buildTransaction(
+                            {"chainId": chainid, "gasPrice": w3.eth.gas_price, "from": address_owner, "nonce": nonce})
+
+                        # firmar transacción
+                        sign_transaction = w3.eth.account.sign_transaction(
+                            transaction, private_key=private_key)
+
+                        # recibo (se espera por ello)
+                        receipt = w3.eth.wait_for_transaction_receipt(
+                            w3.eth.send_raw_transaction(sign_transaction.rawTransaction))
+
+                        # Mostrar el contract address del contrato
+                        contract_address = receipt.contractAddress
+                        print("Contract address deployed: {}".format(
+                            contract_address))
+                        
+                        # Generar Deposit de fondos y crear la firma
+                        # 
+                        #
+                        message = Functions.get_instance().give_me_params(level)
+                        print("message: {}".format(message))
+                        signable_message = encode_defunct(text=message)
+                        sign = w3.eth.account.sign_message(signable_message,private_key=private_key)
+                        hash_message = sign[0].hex()
+                        signature = sign[4].hex()
+                        r = signature[2:66]
+                        s = signature[66:130]
+                        v = signature[130:132]
+
+                        print(w3.toBytes(hexstr=hash_message))
+                        print(w3.toBytes(hexstr=r))
+                        print(w3.toBytes(hexstr=s))
+                        print(w3.toBytes(hexstr=v))
+                        
+
+
+                        nonce = w3.eth.getTransactionCount(address_owner)
+                        transaction2 = contract.functions.deposit(w3.toBytes(hexstr=hash_message), w3.toInt(hexstr=v), w3.toBytes(hexstr=r),w3.toBytes(hexstr=s)).build_transaction({"chainId": chainid, "gasPrice": w3.eth.gas_price, "value": 1000000000, "from": address_owner, "to": contract_address, "nonce": nonce})
+
+                        # firmar transacción
+                        sign_transaction2 = w3.eth.account.sign_transaction(
+                            transaction2, private_key=private_key)
+
+                        # recibo (se espera por ello)
+                        receipt = w3.eth.wait_for_transaction_receipt(
+                            w3.eth.send_raw_transaction(sign_transaction2.rawTransaction))
+
+                        try:
+                            nonce = w3.eth.getTransactionCount(address_owner)
+                            transaction = base.functions.addContract(contract_address, user_address, int(level), param).buildTransaction(
+                                {"chainId": chainid, "gasPrice": w3.eth.gas_price, "from": address_owner, "nonce": nonce})
+                            print("param: {}".format(param))
+
+                            sign_transaction = w3.eth.account.sign_transaction(
+                                transaction, private_key=private_key)
+
+                            receipt = w3.eth.wait_for_transaction_receipt(
+                                w3.eth.send_raw_transaction(sign_transaction.rawTransaction))
+
+                            if not level in contract_addresses[network_name].keys():
+                                contract_addresses[network_name][level] = []
+
+                            contract_addresses[network_name][level].append(
+                                {'contract_address': contract_address, 'user_address': user_address})
+
+                            Functions.get_instance().set_contract_address_file(contract_addresses)
+                            print("updated contract-addresses.json")
+
+                        except Exception as e:
+                            print(e)
+                            return "{}".format(e)
+
+                        return render_template("replay_me.html", base_address=base_address, abi_base=abi_base, network=network, contract_address=contract_address, abi_address=abi)
+
+                    else:
+                        print("{} ya tiene level {} desplegado".format(
+                            user_address, level))
+                        contract_address = Functions.get_instance().give_me_contract_address(
+                            network_name, level, user_address)
+                        contract = w3.eth.contract(
+                            abi=abi, address=contract_address)
+
+                        return render_template("replay_me.html", base_address=base_address, abi_base=abi_base, network=network, contract_address=contract_address, abi_address=abi, error=True, msg="Ya tienes un contrato de este level desplegado")
+
+                else:
+                    return ("error con bytecode o ABI")
+
+            else:
+                print("No existe player {}".format(user_address))
+                return render_template("create_player.html", base_address=base_address, network=network, abi_base=abi_base)
+
+        else:
+            return "No se ha enviado el user_address ni el level del reto"
+
+
+
+
+
+
+
+
 @DAPP.route("/verify_origin_attack", methods=['POST'])
 def verify_origin_attack():
     if request.method == 'POST':
@@ -1580,6 +1712,8 @@ def deploy():
                     return redirect(url_for('deploy_deny'), code=307)
                 elif int(level) == 11:
                     return redirect(url_for('deploy_forensic_ouch'), code=307)
+                elif int(level) == 12:
+                    return redirect(url_for('deploy_replay_me'), code=307)
             else:
                 return redirect(url_for('createPlayer'))
         else:

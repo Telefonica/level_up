@@ -98,6 +98,13 @@
         "template":"forensic_ouch.html",
         "difficulty":3,
         "score":150
+    },
+    "12":{
+        "name": "replay_me.sol",
+        "constructor": 1,
+        "template":"replay_me.html",
+        "difficulty":5,
+        "score":250
     }
 
 }
