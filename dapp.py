@@ -102,7 +102,7 @@ def playerScore(user_address):
                 if element['user_address'] == user_address:
                     instances_list.append(element['contract_address'])
                     instance = element['contract_address']
-                    result = base.functions.playerStatus(
+                    result = base.functions.getPlayerStatus(
                         user_address, instance).call()
 
                     # result es un array de 3 posiciones: [level,contract_address,flagOK]
@@ -128,7 +128,7 @@ def playerStats(user_address):
             for element in l:
                 if element['user_address'] == user_address:
                     stats[level] = {}
-                    result = base.functions.playerStatus(user_address, element['contract_address']).call()
+                    result = base.functions.getPlayerStatus(user_address, element['contract_address']).call()
                     stats[level]['name'] = challenges_json[level]['name']
                     stats[level]['instance'] = element['contract_address']
                     stats[level]['flag'] = result[2]
@@ -157,7 +157,7 @@ def scoreboard():
 
                 instance = element['contract_address']
                 try:
-                    result = base.functions.playerStatus(user_address,instance).call()
+                    result = base.functions.getPlayerStatus(user_address,instance).call()
                     #result es un array de 3 posiciones: [level,contract_address,flagOK]
                     if result[2]:
                         score = Functions.get_instance().give_me_score(level)

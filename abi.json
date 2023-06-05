@@ -3,6 +3,25 @@
     {
         "abi":[
             {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "previousOwner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "newOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnershipTransferred",
+                "type": "event"
+            },
+            {
                 "inputs": [
                     {
                         "internalType": "address",
@@ -43,6 +62,30 @@
                         "internalType": "address",
                         "name": "_contract",
                         "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_player",
+                        "type": "address"
+                    }
+                ],
+                "name": "checkFlag",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_contract",
+                        "type": "address"
                     }
                 ],
                 "name": "delContract",
@@ -58,23 +101,77 @@
                 "type": "function"
             },
             {
-                "anonymous": false,
                 "inputs": [
                     {
-                        "indexed": true,
                         "internalType": "address",
-                        "name": "previousOwner",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "newOwner",
+                        "name": "_player",
                         "type": "address"
                     }
                 ],
-                "name": "OwnershipTransferred",
-                "type": "event"
+                "name": "existPlayer",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "_player",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "_contract",
+                        "type": "address"
+                    }
+                ],
+                "name": "getPlayerStatus",
+                "outputs": [
+                    {
+                        "components": [
+                            {
+                                "internalType": "uint256",
+                                "name": "level",
+                                "type": "uint256"
+                            },
+                            {
+                                "internalType": "string",
+                                "name": "flag",
+                                "type": "string"
+                            },
+                            {
+                                "internalType": "bool",
+                                "name": "flagOK",
+                                "type": "bool"
+                            }
+                        ],
+                        "internalType": "struct Base.levelStatus",
+                        "name": "",
+                        "type": "tuple"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
             },
             {
                 "inputs": [],
@@ -112,96 +209,6 @@
                 "name": "validateFlag",
                 "outputs": [],
                 "stateMutability": "payable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_contract",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "_player",
-                        "type": "address"
-                    }
-                ],
-                "name": "checkFlag",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "_player",
-                        "type": "address"
-                    }
-                ],
-                "name": "existPlayer",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "owner",
-                "outputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "name": "playerStatus",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "level",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "flag",
-                        "type": "string"
-                    },
-                    {
-                        "internalType": "bool",
-                        "name": "flagOK",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "view",
                 "type": "function"
             }
         ]

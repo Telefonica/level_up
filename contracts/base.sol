@@ -9,14 +9,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract Base is Ownable {
 
 
-    mapping (address => bool) registeredContracts;
-    mapping (address => bool) registeredPlayers;
+    mapping (address => bool) private registeredContracts;
+    mapping (address => bool) private registeredPlayers;
     struct levelStatus{
         uint level;
         string flag;
         bool flagOK;
     }
-    mapping(address => mapping(address => levelStatus)) public playerStatus;
+    mapping(address => mapping(address => levelStatus)) private playerStatus;
     // [player_address][instance_address].levelStatus
 
     function addContract(address _contract, address _player, uint _level, string memory _flag) public onlyOwner{
@@ -33,6 +33,12 @@ contract Base is Ownable {
     function delContract(address _contract) public onlyOwner{
         require(registeredContracts[_contract],"contract not registered");
         registeredContracts[_contract] = false;
+    }
+
+    function getPlayerStatus(address _player, address _contract) public view onlyOwner returns(levelStatus memory){
+        require(!registeredPlayers[msg.sender],"player already registered");
+        require(registeredContracts[_contract],"contract not registered");
+        return playerStatus[_player][_contract];
     }
 
     function addPlayer() public {
