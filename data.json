@@ -15,6 +15,10 @@
         "name": "liquidity_provider.sol",
         "constructor": 0
     },
+    "1004":{
+        "name": "nft.sol",
+        "constructor": 0
+    },
     "0":{
         "name": "interact.sol",
         "constructor": 1,

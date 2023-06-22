@@ -3,7 +3,29 @@
 {% block title %}Player{% endblock %}
 {% block main %}
     <div class="m-2 p-2 justify-content-center">
-      <h2 class="text-gradient-2">Player stats</h2>
+      {% if player.nft_address %}
+      <div class="row">
+        <div class="col text-truncate m-0 fs-2 text-gradient-2">
+          NFT Address: {{ player.nft_address }}
+        </div>
+      </div>
+      {% endif %}
+
+      <h3 class="text-gradient-2 m-2">Player stats</h3>
+
+      <div class="row d-flex justify-content-center my-3">
+      {% for key, value in player.nft.items() %}
+        {% if value["mint"] %}
+          <div class="card m-2" style="width: 9rem;">
+            <img src={{ value["image"] }} alt={{ value["name"]|capitalize }} class="card-img-top p-2 rounded-4">
+            <div class="card-body p-2">
+              <h5 class="card-title">{{ value["name"]|capitalize }}</h5>
+              <p class="card-subtitle"><span class="fw-bold">ID: </span>{{ key }}</p>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+      </div>
 
       <p><strong>User address:</strong> {{ player.user_address }}</p>
       <p><strong>Score:</strong> {{ player.score }}</p>
@@ -43,17 +65,71 @@
       <p><strong>No hay contratos desplegados</strong></p>
       {% endif %}
 
-    {% if player.exists_player %}
+    <div class="m-2 p-2 justify-content-center">
+      {% if player.exists_player %}
       <button class="btn btn-danger" onclick="window.location.href='/deletePlayer'">Eliminar player</button>
+      {% else %}
+      <button class="btn btn-primary" onclick="window.location.href='/createPlayer'">Crear player</button>
+      {% endif %}
+
       <button class="btn btn-secondary" onclick="window.location.href='/'">Volver</button>
 
+      {% if player.exists_player and player.claim_nft %}
+      <button id="claim-nft" class="btn btn-primary position-relative">
+        Reclamar NFT
+        <span class="position-absolute top-0 start-100 translate-middle p-2 bg-danger border border-light rounded-circle">
+          <span class="visually-hidden">New alerts</span>
+        </span>
+      </button>
+      {% endif %}
     </div>
-    {% else %}
-    <div class="m-2 p-2 justify-content-center">
-        <p>El jugador no existe.</p>
-        <button class="btn btn-primary" onclick="window.location.href='/createPlayer'">Crear player</button>
-        <button class="btn btn-secondary" onclick="window.location.href='/'">Volver</button>
 
-    </div>
-    {% endif %}
+  </div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+  const baseURL = window.location.origin;
+  document.getElementById("claim-nft")
+  .addEventListener("click", function(event){
+    event.preventDefault()
+    claimNFT()
+  });
+
+  async function claimNFT(){
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    const signer = provider.getSigner();
+
+    const address = await signer.getAddress();
+
+    const paramsSign = new URLSearchParams([
+      ["user_address", address],
+    ]);
+    const signUrl = new URL('verify', baseURL);
+    signUrl.search = paramsSign;
+
+    const verify_req = await fetch(signUrl)
+    const verify_res = await verify_req.json()
+
+    signature = await signer.signMessage(verify_res['message']);
+
+    const formData = new FormData();
+    formData.append("user_address", address);
+    formData.append("signature", signature);
+
+    const signOptions = {
+      method: 'POST',
+      body: formData,
+    }
+    const signClaim = new URL('nftSign', baseURL);
+    const claim_req = await fetch(signClaim, signOptions)
+
+    if (claim_req.redirected) {
+      alert("NFT reclamado")
+      window.location.href = claim_req.url;
+    }
+
+  }
+</script>
 {% endblock %}

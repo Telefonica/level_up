@@ -8,7 +8,7 @@
 {% set active_page = active_page|default('index') -%}
 
 <!doctype html>
-<html lang="en" class="h-100">
+<html lang="en" class="min-vh-100">
   <head>
     {% block head %}
     <meta charset="utf-8">
@@ -23,7 +23,7 @@
     {% endblock %}
   </head>
 
-  <body class="d-flex flex-column h-100">
+  <body class="d-flex flex-column min-vh-100">
     {% block header %}
     <header class="d-flex flex-wrap justify-content-center py-3 mb-4 mx-4 border-bottom">
       <h3 class=" d-flex align-items-center mb-3 mb-md-0 me-md-auto text-gradient">{ level_up! : Web3 Security WarGames }</h3>

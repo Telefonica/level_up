@@ -11,6 +11,9 @@ import json
 from math import fabs
 import random
 
+def generate_sign():
+    return str(random.getrandbits(256))
+
 def generate_flag():
     return str(random.getrandbits(128))
 
@@ -104,9 +107,27 @@ class Functions:
         
         if int(level) == 12:
             return generate_flag()
+        
+    def give_me_sign(self):
+        return generate_sign()
             
     def give_me_value(self):
         return generate_flag()
+    
+    def give_me_nfts(self, score):
+        nfts = []
+        if int(score) >= 0:
+            nfts.append(1)
+        if int(score) >= 500:
+            nfts.append(2)
+        if int(score) >= 1000:
+            nfts.append(3)
+        if int(score) >=1500:
+            nfts.append(4)
+        if int(score) >= 2500:
+            nfts.append(5)
+        
+        return nfts
 
     def exist_contracts_file(self):
         if not self.file_contract_address is None:

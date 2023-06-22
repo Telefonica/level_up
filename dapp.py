@@ -11,14 +11,16 @@ You should have received a copy of the Affero GNU General Public License along w
 import os
 import json
 
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, jsonify
+from flask_cors import CORS
 from web3 import Web3
 from eth_account.messages import encode_defunct
 
 from functions import Functions
 
-
 DAPP = Flask(__name__)
+
+CORS(DAPP)
 
 # Blockchain settings
 network = os.environ.get("NETWORK")
@@ -28,13 +30,24 @@ address_owner = os.environ.get("ADDRESS_OWNER")
 private_key = os.environ.get("PRIVATE_KEY")
 w3 = Web3(Web3.HTTPProvider(network))
 
+if not w3.isConnected():
+    print("No se ha podido conectar a la red {}".format(network))
+    exit(1)
+
 # Game settings
 LEVEL_BASE = os.environ.get("LEVEL_BASE")
+LEVEL_NFT = os.environ.get("LEVEL_NFT")
 
 # Files paths
 SITE_ROOT = os.path.realpath(os.path.dirname(__file__))
 challenges = os.path.join(SITE_ROOT, "challenges.json")
 challenges_json = json.load(open(challenges))
+
+nft_data_file = os.path.join(SITE_ROOT, "nft-data.json")
+nft_data = json.load(open(nft_data_file))
+
+# Execution variables
+nft_sign = {}
 
 def init_config():
     if not Functions.get_instance().exist_contracts_file():
@@ -44,9 +57,13 @@ def init_config():
 
         # Desplegamos el contrato base y obtenemos dirección
         addr = deploy_base()
+        
+        # Desplegamos el contrato NFT
+        nft_addr = deploy_nft()
 
-        if not addr is None:
+        if not addr is None and not nft_addr is None:
             contract_addresses[network_name][LEVEL_BASE] = addr
+            contract_addresses[network_name][LEVEL_NFT] = nft_addr
             contract_list_not1000 = Functions.get_instance().get_contract_list_without1000()
             for contract in contract_list_not1000:
                 contract_addresses[network_name][contract] = []
@@ -90,6 +107,39 @@ def deploy_base():
             return contract_address
 
 
+def deploy_nft():
+    bytecode = Functions.get_instance().get_bytecode_level(LEVEL_NFT)
+    abi = Functions.get_instance().get_abi_level(LEVEL_NFT)
+
+    if bytecode and abi:
+        contract = w3.eth.contract(abi=abi, bytecode=bytecode)
+
+        # Tomamos Nonce
+        nonce = w3.eth.getTransactionCount(address_owner)
+
+        # Construimos transacción y comprobamos parámetros del constructor
+        params_constructor = Functions.get_instance(
+        ).get_constructor_params_level(LEVEL_NFT)
+
+        if int(params_constructor) == 0:
+            transaction = contract.constructor().buildTransaction(
+                {"chainId": chainid, "gasPrice": w3.eth.gas_price, "from": address_owner, "nonce": nonce})
+
+            # firmar transacción
+            sign_transaction = w3.eth.account.sign_transaction(
+                transaction, private_key=private_key)
+
+            # recibo (se espera por ello)
+            receipt = w3.eth.wait_for_transaction_receipt(
+                w3.eth.send_raw_transaction(sign_transaction.rawTransaction))
+
+            # Mostrar el contract address del contrato
+            contract_address = receipt.contractAddress
+            print("NFT contract address deployed: {}".format(contract_address))
+
+            return contract_address
+
+
 def playerScore(user_address):
     instances_list = []
     player_score = 0
@@ -103,7 +153,7 @@ def playerScore(user_address):
                     instances_list.append(element['contract_address'])
                     instance = element['contract_address']
                     result = base.functions.getPlayerStatus(
-                        user_address, instance).call()
+                        user_address, instance).call({"from": address_owner})
 
                     # result es un array de 3 posiciones: [level,contract_address,flagOK]
                     if result[2]:
@@ -128,7 +178,7 @@ def playerStats(user_address):
             for element in l:
                 if element['user_address'] == user_address:
                     stats[level] = {}
-                    result = base.functions.getPlayerStatus(user_address, element['contract_address']).call()
+                    result = base.functions.getPlayerStatus(user_address, element['contract_address']).call({"from": address_owner})
                     stats[level]['name'] = challenges_json[level]['name']
                     stats[level]['instance'] = element['contract_address']
                     stats[level]['flag'] = result[2]
@@ -141,6 +191,38 @@ def playerStats(user_address):
                     #instances_list.append(element['contract_address'])
 
     return stats
+
+
+def playerNFT(user_address):
+    nft_stats = {}
+    claim = 0
+
+    for level in nft_data.keys():
+        result = nft.functions.balanceOf(user_address, int(level)).call({"from": address_owner})
+        if result > 0:
+            #tiene NFT ya 'minteado'
+            nft_stats[level] = {}
+            nft_stats[level]['mint'] = True
+        else:
+            nft_stats[level] = {}
+            nft_stats[level]['mint'] = False
+        nft_stats[level]['name'] = nft_data[level]['name']
+        if nft_data[level] == 'master':
+            nft_stats[level]['claim'] = 2500
+        else:
+            nft_stats[level]['claim'] = claim
+            claim += 500
+
+        nft_stats[level]['image'] = nft_data[level]['image']
+
+    return nft_stats
+
+def need_claim_nft(nft_stats, score):
+    for x in nft_stats.keys():
+        if score >= nft_stats[x]['claim'] and not nft_stats[x]['mint']:
+            return True
+    return False
+
 
 def scoreboard():
     levels = Functions.get_instance().get_contract_list_without1000()
@@ -157,7 +239,7 @@ def scoreboard():
 
                 instance = element['contract_address']
                 try:
-                    result = base.functions.getPlayerStatus(user_address,instance).call()
+                    result = base.functions.getPlayerStatus(user_address,instance).call({"from": address_owner})
                     #result es un array de 3 posiciones: [level,contract_address,flagOK]
                     if result[2]:
                         score = Functions.get_instance().give_me_score(level)
@@ -175,6 +257,9 @@ contract_addresses = init_config()
 base_address = contract_addresses[network_name][LEVEL_BASE]
 abi_base = Functions.get_instance().get_abi_level(LEVEL_BASE)
 base = w3.eth.contract(abi=abi_base, address=base_address)
+nft_address = contract_addresses[network_name][LEVEL_NFT]
+abi_nft = Functions.get_instance().get_abi_level(LEVEL_NFT)
+nft = w3.eth.contract(abi=abi_nft, address=nft_address)
 
 @DAPP.route("/", methods=['GET'])
 def go():
@@ -201,11 +286,77 @@ def player():
             player_dict['exists_player'] = exists_player
             player_dict['score'] = playerScore(user_address)
             player_dict['level'] = playerStats(user_address)
+            player_dict['nft'] = playerNFT(user_address)
+            player_dict['nft_address'] = nft_address
+            player_dict['claim_nft'] = need_claim_nft(player_dict['nft'], int(player_dict['score']))
 
             # return player_dict
             return render_template("player.html",player=player_dict)
 
     return render_template("player.html",player=None)
+
+@DAPP.route("/verify", methods=["GET"])
+def verify():
+    if request.method == 'GET':
+        if request.args.get('user_address'):
+            user_address = request.args.get('user_address')
+            message = Functions.get_instance().give_me_sign()
+            nft_sign[user_address] = message
+            return jsonify({"message": message})
+        else:
+            return redirect("/")    
+
+    return redirect("/")
+
+@DAPP.route("/nftSign", methods=["POST"])
+def nftSign():
+    if request.form.get('user_address') and request.form.get('signature'):
+        signature = request.form.get('signature')
+        user_address = request.form.get('user_address')
+
+        if not user_address in nft_sign:
+            return redirect("/")
+
+        print("signature: {}".format(signature))
+
+        #Verificar mensaje y firmante (importante verificar también el mensaje firmado)
+
+        #signer = w3.eth.account.recoverHash(message_hash=w3.toBytes(hexstr=hash_message),signature=w3.toBytes(hexstr=signature))
+        m_encode = encode_defunct(text=nft_sign[user_address])
+        s_message = w3.eth.account.recover_message(m_encode, signature=w3.toBytes(hexstr=signature))
+        print("signer_message: {}".format(s_message))
+        if user_address == s_message:
+            # Verificar token_id del NFT que le pertenece
+            nfts = Functions.get_instance().give_me_nfts(playerScore(user_address))
+            print("listado nfts: {}".format(nfts))
+            
+            # Verificar si tienes alguno que 'mintear'
+            for token_id in nfts:
+                result = nft.functions.balanceOf(user_address,token_id).call({"from": address_owner})
+                if result == 0:
+                    nonce = w3.eth.getTransactionCount(address_owner)
+                    transaction = nft.functions.mint(user_address,token_id,1,"0x00").buildTransaction(
+                        {"chainId": chainid, "gasPrice": w3.eth.gas_price, "from": address_owner, "nonce": nonce})
+
+                    # firmar transacción
+                    sign_transaction = w3.eth.account.sign_transaction(
+                        transaction, private_key=private_key)
+
+                    # recibo (se espera por ello)
+                    receipt = w3.eth.wait_for_transaction_receipt(
+                        w3.eth.send_raw_transaction(sign_transaction.rawTransaction))
+
+                    print("'minteado' {} en contrato {}".format(token_id,nft_address))
+
+            if user_address in nft_sign[user_address]:
+                del nft_sign[user_address]
+            return redirect("/player?user_address={}".format(user_address))
+
+    else:
+        return redirect("/")
+    
+    return redirect("/")
+
 
 @DAPP.route("/about", methods=['GET'])
 def about():
@@ -1736,6 +1887,25 @@ def playerOptions():
             return render_template("player_options.html", user_address=user_address)
 
 
+
+@DAPP.route("/<id>", methods=['GET'])
+def index(id):
+    if "1.json" in id:
+        return jsonify(nft_data["1"])
+
+    if "2.json" in id:
+         return jsonify(nft_data["2"])
+    
+    if "3.json" in id:
+        return jsonify(nft_data["3"])
+
+    if "4.json" in id:
+        return jsonify(nft_data["4"])
+
+    if "5.json" in id:
+        return jsonify(nft_data["5"])
+    
+    return redirect('/')
 
 '''
 if __name__ == '__main__':

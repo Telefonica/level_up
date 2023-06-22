@@ -1,0 +1,27 @@
+{
+    "1": {
+        "name": "newbie",
+        "description": "Newbies Collection of level_up!",
+        "image": "https://ipfs.io/ipfs/QmPUzTrB6y13joogbe3QfvqPAyCvgwKSfXQMkZrJv5gKe5"
+    },
+    "2": {
+        "name": "rookie",
+        "description": "Rookie Collection of level_up!",
+        "image": "https://ipfs.io/ipfs/QmahEPBs9SCfuERewHfZSPpgZUKnzfPuAuDwb8y99VVYkn"
+    },
+    "3": {
+        "name": "hero",
+        "description": "Hero Collection of level_up!",
+        "image": "https://ipfs.io/ipfs/QmTe3EVz57VpZ3vpmtWveAVhLaH6fyLEZUBBwvFehtiTh5"
+    },
+    "4": {
+        "name": "superhero",
+        "description": "Superhero Collection of level_up!",
+        "image": "https://ipfs.io/ipfs/QmVDn6MC7dwp2eBWEkFwViHRpQujTpMixCXYkT2KUq67XG"
+    },
+    "5": {
+        "name": "master",
+        "description": "Master Collection of level_up!",
+        "image": "https://ipfs.io/ipfs/QmcfM9GNepqdkyo9awuhzz8doEncZHLEbL3w1LuxwceL6Q"
+    }
+}
