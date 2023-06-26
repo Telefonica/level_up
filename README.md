@@ -41,6 +41,7 @@ PRIVATE_KEY=[PRIVATE_KEY_HERE]
 
 # Game settings
 LEVEL_BASE=1000
+LEVEL_NFT=1004
 ```
 
 The address and the private key must be specified in order to deploy the contracts.
