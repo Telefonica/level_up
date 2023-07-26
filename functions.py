@@ -108,6 +108,12 @@ class Functions:
         if int(level) == 12:
             return generate_flag()
         
+        if int(level) == 13:
+            n = 0
+            while n < 20:
+                n = generate_number(9999)
+            return n
+        
     def give_me_sign(self):
         return generate_sign()
             

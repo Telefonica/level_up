@@ -76,5 +76,11 @@
         "href":"replay_me",
         "difficulty":5,
         "score":250
+    },
+    "13":{
+        "name": "Guess_my_number",
+        "href":"guess",
+        "difficulty":4,
+        "score":200
     }
 }

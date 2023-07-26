@@ -19,6 +19,10 @@
         "name": "nft.sol",
         "constructor": 0
     },
+    "1005":{
+        "name": "numbers.sol",
+        "constructor": 1
+    },
     "0":{
         "name": "interact.sol",
         "constructor": 1,
@@ -109,6 +113,13 @@
         "template":"replay_me.html",
         "difficulty":5,
         "score":250
+    },
+    "13":{
+        "name": "guess.sol",
+        "constructor": 3,
+        "template":"guess.html",
+        "difficulty":4,
+        "score":200
     }
 
 }
