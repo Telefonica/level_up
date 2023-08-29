@@ -1,0 +1,115 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Pay Me!{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>¿Eres buen pagador?</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> En este reto encontrarás un contrato el cual deberás saber interpretar</li>
+      <li class="list-group-item"><b>Paso 2:</b> Recuerda abrir las <i>‘DevTools’</i> y disponer de la consola con la que poder interactuar con los objetos de Javascript</li>
+      <li class="list-group-item"><b>PISTA:</b> ¿Te gusta abonar tus deudas? ¿Todo tiene un precio?</li>
+      <li class="list-group-item"><b>Paso 3:</b> Cuando consigas tu <code>flag</code> no olvides validarla contra el contrato <code>base</code>, si quieres sumar tus puntos</li>
+      <li class="list-group-item"><b>PISTA:</b> A veces poco no es suficiente, pero mucho puede ser demasiado</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-FileCopyrightText: © 2023 Telefónica Digital España S.L.
+
+  // SPDX-License-Identifier: AGPL-3.0-or-later
+  
+  pragma solidity ^0.8.4;
+  
+  contract MicroPayment {
+      string flag;
+      address public owner;
+  
+      constructor(string memory _flag) {
+          flag = _flag;
+          owner = msg.sender;
+      }
+  
+      modifier onlyOwner() {
+          require(msg.sender == owner, "No eres el propietario");
+          _;
+      }
+  
+      function payMe() public payable {
+          require(msg.value >= 0.000000000001 ether, "No has pagado lo suficiente");
+          require(msg.value <= 0.000000001 ether, "Has pagado demasiado");
+          owner = msg.sender;
+      }
+  
+      function getFlag() public view onlyOwner returns (string memory) {
+          return flag;
+      }
+  
+      function giveMeMoney() public onlyOwner {
+          payable(msg.sender).transfer(address(this).balance);
+      }
+  }
+      </code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="14">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+      alert("Ya tienes contrato desplegado. Type contract for playing!");
+      console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+
+    async function Web3Prov(){
+      const provider = new ethers.providers.Web3Provider(window.ethereum); 
+      await provider.send("eth_requestAccounts", []);
+      const address = await provider.getSigner().getAddress();
+
+      base = new ethers.Contract(
+          base_add,
+          abi,
+          provider.getSigner(0)
+      );
+
+      {% if not contract_address %}
+      document.getElementById('user_address').value = address;
+      {% endif %}
+
+      window.base = base;
+      window.provider = provider.getSigner(0);
+      window.player = address;
+
+      {% if contract_address %}
+      contract_address = '{{contract_address}}';
+      abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+      contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+      window.contract
+      console.info("type contract for playing!")
+      {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

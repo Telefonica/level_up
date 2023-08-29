@@ -41,6 +41,7 @@ PRIVATE_KEY=[PRIVATE_KEY_HERE]
 
 # Game settings
 LEVEL_BASE=1000
+LEVEL_NFT=1004
 ```
 
 Se debe indicar la dirección y la clave privada para poder desplegar los contratos.

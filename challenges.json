@@ -82,5 +82,11 @@
         "href":"guess",
         "difficulty":4,
         "score":200
+    },
+    "14":{
+        "name": "Pay_me",
+        "href": "payme",
+        "difficulty":1,
+        "score":50
     }
 }
