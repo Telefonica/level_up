@@ -2,3 +2,4 @@ flask
 python-dotenv
 watchdog
 web3==5.31.3
+flask-cors
