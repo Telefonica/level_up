@@ -1,0 +1,221 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Dex Knowledge{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>En este reto deberás intercambiar un token en un <code>exchange descentralizado</code>, ¿Podrás lograrlo?</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> Soy el reto <code>Dex Knowlede.</code>Mi objetivo es mostrarte cómo funciona un DEX</li>
+      <li class="list-group-item"><b>Paso 2:</b> El reto consiste en tres contratos, dos idénticos que serán simples tokens ERC20, y un DEX en el que tendrás que capturar la bandera. Para simplificar el reto, una vez despliegas los contratos el exchange minteará tokens para tener liquidez suficiente para tus swaps</li>
+      <li class="list-group-item"><b>Paso 3:</b> La idea principal es que consigas <code>cambiar tokens por otros</code>, para ello tendrás que fijarte en las funcines swapAforB(_amount) y swapBforA(_amount)
+        <pre class="text-start rounded-3 mt-2"><code>function swapAforB(uint256 quantity) public {
+    require(tokenA.balanceOf(msg.sender) >= quantity, "Saldo insuficiente de tokenA");
+    require((tokenB.balanceOf(address(this)) >= (quantity * proportion)), "Liquidez insuficiente para el intercambio");
+    require(tokenA.transferFrom(msg.sender, address(this), quantity), "Fallo en la transferencia de msg.sender al contrato");
+    uint256 receivedQuantity = (quantity * proportion);
+    require(tokenB.transfer(msg.sender, receivedQuantity), "Fallo en la transferencia desde el contrato al msg.sender");
+    swap = true;
+}
+
+function swapBforA(uint256 quantity) public {
+    require(quantity > proportion, "Intercambio no justo");
+    require(tokenB.balanceOf(msg.sender) >= quantity, "Saldo insuficiente de tokenB");
+    require((tokenA.balanceOf(address(this)) >= (quantity / proportion)), "Liquidez insuficiente para el intercambio");
+    require(tokenB.transferFrom(msg.sender, address(this), quantity), "Fallo en la transferencia de msg.sender al contrato");
+    uint256 receivedQuantity = quantity / proportion;
+    require(tokenA.transfer(msg.sender, receivedQuantity), "Fallo en la transferencia desde el contrato al msg.sender");
+    swap = true;
+}</code></pre>
+      </li>
+      <li class="list-group-item"><b>Paso 4:</b> Puedes interactuar con los contratos Token, para ver su dirección podrás utilizar el comando <code>help()</code> o llamar a su función en el propio DEX</li>
+      <li class="list-group-item"><b>PISTA:</b> transfer(_recipient y transferFrom parecen lo mismo… pero, ¿Realmente lo son?</li>
+      <li class="list-group-item"><b>Paso 5:</b> Una vez hayas realizado el swap, podrás ayudarte de funciones como burnToken(_amount) para completar el reto.</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+
+interface Itoken {
+    function mint(address to, uint256 amount) external;
+
+    function burn(address _from, uint256 amount) external;
+
+    function balanceOf(address account) external view returns (uint256);
+
+    function transfer(address recipient, uint amount) external returns (bool);
+
+    function allowance(address owner, address spender) external view returns (uint);
+
+    function approve(address spender, uint amount) external returns (bool);
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint amount
+    ) external returns (bool);
+
+    event Transfer(address indexed from, address indexed to, uint amount);
+}
+
+contract DEX_CTF {
+    Itoken public tokenA;
+    Itoken public tokenB;
+    string private flag;
+    uint256 public proportion;
+    bool public swap;
+
+    constructor(address _tokenA, address _tokenB, string memory _flag, uint256 amountA, uint256 amountB) {
+        tokenA = Itoken(_tokenA);
+        tokenB = Itoken(_tokenB);
+        flag = _flag;
+        tokenA.mint(address(this), amountA);
+        tokenB.mint(address(this), amountB);
+        proportion = (tokenB.balanceOf(address(this)) / tokenA.balanceOf(address(this)));
+        swap = false;
+    }
+        
+    function swapAforB(uint256 quantity) public {
+        require(tokenA.balanceOf(msg.sender) >= quantity, "Saldo insuficiente de tokenA");
+        require((tokenB.balanceOf(address(this)) >= (quantity * proportion)), "Liquidez insuficiente para el intercambio");
+        require(tokenA.transferFrom(msg.sender, address(this), quantity), "Fallo en la transferencia de msg.sender al contrato");
+        uint256 receivedQuantity = (quantity * proportion);
+        require(tokenB.transfer(msg.sender, receivedQuantity), "Fallo en la transferencia desde el contrato al msg.sender");
+        swap = true;
+    }
+    
+    function swapBforA(uint256 quantity) public {
+        require(quantity > proportion, "Intercambio no justo");
+        require(tokenB.balanceOf(msg.sender) >= quantity, "Saldo insuficiente de tokenB");
+        require((tokenA.balanceOf(address(this)) >= (quantity / proportion)), "Liquidez insuficiente para el intercambio");
+        require(tokenB.transferFrom(msg.sender, address(this), quantity), "Fallo en la transferencia de msg.sender al contrato");
+        uint256 receivedQuantity = quantity / proportion;
+        require(tokenA.transfer(msg.sender, receivedQuantity), "Fallo en la transferencia desde el contrato al msg.sender");
+        swap = true;
+    }
+    
+    function mintA(uint256 amount) public {
+        tokenA.mint(msg.sender, amount);
+    }
+
+    function mintB(uint256 amount) public {
+        tokenB.mint(msg.sender, amount);
+    }
+
+    function burningA(uint256 _amount) public {
+        require(tokenA.balanceOf(msg.sender) >= _amount, "No tienes esa cantidad");
+        tokenA.burn(msg.sender, _amount);
+    }
+
+    function burningB(uint256 _amount) public {
+        require(tokenB.balanceOf(msg.sender) >= _amount, "No tienes esa cantidad");
+        tokenB.burn(msg.sender, _amount);
+    }
+
+    function allowanceA() public view returns (uint) {
+        uint allowedTo = tokenA.allowance(msg.sender, address(this));
+        return allowedTo;
+    }
+
+    function allowanceB() public view returns (uint) {
+        uint allowedTo = tokenB.allowance(msg.sender, address(this));
+        return allowedTo;
+    }
+
+    function balanceA() public view returns (uint256) {
+        return tokenA.balanceOf(msg.sender);
+    }
+
+    function balanceB() public view returns (uint256) {
+        return tokenB.balanceOf(msg.sender);
+    }
+
+    function getFlag() public view returns (string memory) {
+        require(swap == true, "No has realizado ningun intercambio");
+        require(tokenB.balanceOf(msg.sender) > 0 && tokenA.balanceOf(msg.sender) > 0, "Ambos saldos de tokens deben ser mayores que 0");
+        require(tokenB.balanceOf(msg.sender) == tokenA.balanceOf(msg.sender), "Los saldos de tokens deben ser iguales");
+        return flag;
+    }
+}
+        
+      </code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="15">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        window.contract
+
+        contract_address_token_A = '{{contract_address_token_A}}';
+        contract_address_token_B = '{{contract_address_token_B}}';
+        abi_token_A = JSON.parse('{{abi_token | tojson | safe}}');
+        abi_token_B = JSON.parse('{{abi_token | tojson | safe}}');
+        tokenA = new ethers.Contract(contract_address_token_A,abi_token_A,provider.getSigner(0));
+        tokenB = new ethers.Contract(contract_address_token_B,abi_token_B,provider.getSigner(0));
+
+        window.tokenA;
+        window.tokenB;
+
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues',
+                     tokenA:'Interactúa con el Token A',
+                     tokenB:'Interactúa con el Token B'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}

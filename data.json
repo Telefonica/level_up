@@ -127,6 +127,13 @@
         "template":"payme.html",
         "difficulty":1,
         "score":50
+    },
+    "15":{
+        "name": "Dex_knowledge.sol",
+        "constructor": 5,
+        "template":"dexknow.html",
+        "difficulty":3,
+        "score":150
     }
 
 }

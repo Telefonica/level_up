@@ -114,6 +114,10 @@ class Functions:
                 n = generate_number(9999)
             return n
         
+        if int(level) == 15:
+            a = generate_number(200)
+            b = generate_number(2000)
+            return a,b
     def give_me_sign(self):
         return generate_sign()
             

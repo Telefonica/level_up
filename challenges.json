@@ -88,5 +88,11 @@
         "href": "payme",
         "difficulty":1,
         "score":50
+    },
+    "15":{
+        "name": "Dex_knowledge",
+        "href": "dexknow",
+        "difficulty":3,
+        "score":150
     }
 }
