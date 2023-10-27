@@ -9,11 +9,11 @@
   <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
   
   <div class="container-fluid col-10 my-3">
-    <p>En este reto deberás intercambiar un token en un <code>exchange descentralizado</code>, ¿Podrás lograrlo?</p>
+    <p>En este reto deberás intercambiar un token en un <code>exchange descentralizado</code>, ¿podrás lograrlo?</p>
     <ul class="list-group text-start rounded-3">
-      <li class="list-group-item"><b>Paso 1:</b> Soy el reto <code>Dex Knowlede.</code>Mi objetivo es mostrarte cómo funciona un DEX</li>
-      <li class="list-group-item"><b>Paso 2:</b> El reto consiste en tres contratos, dos idénticos que serán simples tokens ERC20, y un DEX en el que tendrás que capturar la bandera. Para simplificar el reto, una vez despliegas los contratos el exchange minteará tokens para tener liquidez suficiente para tus swaps</li>
-      <li class="list-group-item"><b>Paso 3:</b> La idea principal es que consigas <code>cambiar tokens por otros</code>, para ello tendrás que fijarte en las funcines swapAforB(_amount) y swapBforA(_amount)
+      <li class="list-group-item"><b>Paso 1:</b> Soy el reto <code>Dex Knowledge</code>. Mi objetivo es mostrarte cómo funciona un DEX.</li>
+      <li class="list-group-item"><b>Paso 2:</b> El reto consiste en tres contratos, dos idénticos que serán simples tokens ERC20, y un DEX en el que tendrás que capturar la bandera. Para simplificar el reto, una vez despliegas los contratos el exchange minteará tokens para tener liquidez suficiente para tus swaps.</li>
+      <li class="list-group-item"><b>Paso 3:</b> La idea principal es que consigas cambiar tokens por otros, para ello tendrás que fijarte en las funcines <code>swapAforB(_amount)</code> y <code>swapBforA(_amount)</code>.
         <pre class="text-start rounded-3 mt-2"><code>function swapAforB(uint256 quantity) public {
     require(tokenA.balanceOf(msg.sender) >= quantity, "Saldo insuficiente de tokenA");
     require((tokenB.balanceOf(address(this)) >= (quantity * proportion)), "Liquidez insuficiente para el intercambio");
@@ -33,8 +33,8 @@ function swapBforA(uint256 quantity) public {
     swap = true;
 }</code></pre>
       </li>
-      <li class="list-group-item"><b>Paso 4:</b> Puedes interactuar con los contratos Token, para ver su dirección podrás utilizar el comando <code>help()</code> o llamar a su función en el propio DEX</li>
-      <li class="list-group-item"><b>PISTA:</b> transfer(_recipient y transferFrom parecen lo mismo… pero, ¿Realmente lo son?</li>
+      <li class="list-group-item"><b>Paso 4:</b> Puedes interactuar con los contratos Token, para ver su dirección podrás utilizar el comando <code>help()</code> o llamar a su función en el propio DEX.</li>
+      <li class="list-group-item"><b>PISTA:</b> <code>transfer(_recipient)</code> y <code>transferFrom</code> parecen lo mismo… pero, ¿realmente lo son?</li>
       <li class="list-group-item"><b>Paso 5:</b> Una vez hayas realizado el swap, podrás ayudarte de funciones como burnToken(_amount) para completar el reto.</li>
     </ul>
   </div>
@@ -145,9 +145,7 @@ contract DEX_CTF {
         require(tokenB.balanceOf(msg.sender) == tokenA.balanceOf(msg.sender), "Los saldos de tokens deben ser iguales");
         return flag;
     }
-}
-        
-      </code></pre>
+}</code></pre>
   </div>
 
   {% if not contract_address %}

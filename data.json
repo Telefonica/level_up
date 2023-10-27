@@ -134,6 +134,13 @@
         "template":"dexknow.html",
         "difficulty":3,
         "score":150
+    },
+    "16":{
+        "name": "Gex_knowledge.sol",
+        "constructor": 1,
+        "template":"gexknow.html",
+        "difficulty":2,
+        "score":75
     }
 
 }

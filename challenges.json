@@ -94,5 +94,11 @@
         "href": "dexknow",
         "difficulty":3,
         "score":150
+    },
+    "16":{
+        "name": "Gas_knowledge",
+        "href": "gasknow",
+        "difficulty":2,
+        "score":75
     }
 }

@@ -1,0 +1,112 @@
+{% extends "challenge.html" %}
+{% set active_page = None %}
+{% block title %}Gas Knowledge{% endblock %}
+{% block main %}
+  {% if base_address %}
+  <h2 class="text-gradient-2">Base Address: {{base_address}}</h2>
+  {% endif %}
+
+  <h2 class="text-gradient-2">{{ self.title() }} challenge</h2>
+  
+  <div class="container-fluid col-10 my-3">
+    <p>En este reto deberás utilizar una mayor cantidad de gas para lograr tu objetivo, ¿serás capaz conseguirlo?</p>
+    <ul class="list-group text-start rounded-3">
+      <li class="list-group-item"><b>Paso 1:</b> En este reto, llamado <code>Gas Knowledge</code>, está el objetivo del aprendizaje sobre el gas que tiene una transacción.</li>
+      <li class="list-group-item"><b>Paso 2:</b> El gas en Ethereum es una unidad de medida que representa el costo de ejecutar transacciones en la red.</li>
+      <li class="list-group-item"><b>Paso 3:</b> Si quieres que tus transacciones se ejecuten lo antes posible, tendrás que incentivar a los mineros a que seleccionen tu transacción por encima de las demás.</li>
+      <li class="list-group-item"><b>PISTA:</b> El ether suele ser un buen incentivo.</li>
+    </ul>
+  </div>
+
+  <div class="container-fluid col-10 my-3">
+    <pre class="text-start rounded-3"><code>// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract GasKnowledge  {
+    string private  flag;
+    uint public gaspricetx;
+    address public owner;
+
+    constructor(string memory _flag)  {
+        flag = _flag;
+        owner = msg.sender;
+        gaspricetx = 1;
+        gaspricetx = tx.gasprice;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "You are not the owner");
+        _;
+    }
+    
+    function add(uint _num1, uint _num2) public returns (uint) {
+        uint result = _num1 + _num2;
+        require(result == 100, "Improve your maths!");
+        require(tx.gasprice > (2 * gaspricetx), "Pay more to get your tx done faster!");
+        owner = msg.sender;
+        return (result);
+    }
+
+    function getFlag() public view onlyOwner returns (string memory) {
+        return flag;
+    }
+}</code></pre>
+  </div>
+
+  {% if not contract_address %}
+  <form class="my-3" action="/deploy" method="post" id="deploy">
+      <input type="hidden" class="visually-hidden" id="level" name="level" value="16">
+      <input type="hidden" class="visually-hidden" id="user_address" name="user_address" value="">
+      <button type="submit" class="btn btn-light border border-dark">Deploy contract</button>
+  </form>
+  {% endif %}
+{% endblock %}
+{% block scripts %}
+  {{ super() }}
+  <script>
+    {% if error %}
+        alert("Ya tienes contrato desplegado. Type contract for playing!");
+        console.log('{{msg}}');
+    {% endif %}
+
+    let base_add = '{{base_address}}';
+    let abi = JSON.parse('{{abi_base | tojson | safe}}');
+    
+    async function Web3Prov(){
+        const provider = new ethers.providers.Web3Provider(window.ethereum); 
+        await provider.send("eth_requestAccounts", []);
+        const address = await provider.getSigner().getAddress();
+
+        base = new ethers.Contract(
+            base_add,
+            abi,
+            provider.getSigner(0)
+        );
+
+        {% if not contract_address %}
+        document.getElementById('user_address').value = address;
+        {% endif %}
+
+        window.base = base;
+        window.provider = provider.getSigner(0);
+        window.player = address;
+
+        {% if contract_address %}
+        contract_address = '{{contract_address}}';
+        abi_address = JSON.parse('{{abi_address | tojson | safe}}');
+        contract = new ethers.Contract(contract_address,abi_address,provider.getSigner(0));
+        window.contract
+
+        console.info("type contract for playing!")
+        {% endif %}
+    }
+
+    function help(){
+      console.table({player:'Devuelve la dirección pública del jugador',
+                     base:'Acceso a contrato base del juego',
+                     contract:'Interactúa con el contrato cuando lo despliegues'});
+    }
+
+    $(Web3Prov());
+  </script>
+{% endblock %}
