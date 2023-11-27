@@ -100,5 +100,11 @@
         "href": "gasknow",
         "difficulty":2,
         "score":75
+    },
+    "17":{
+        "name": "Send_to_me",
+        "href": "sendtome",
+        "difficulty":3,
+        "score":100
     }
 }

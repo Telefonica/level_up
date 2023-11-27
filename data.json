@@ -141,6 +141,13 @@
         "template":"gexknow.html",
         "difficulty":2,
         "score":75
+    },
+    "17":{
+        "name": "Selfdestruct.sol",
+        "constructor": 1,
+        "template":"selfdestruct.html",
+        "difficulty":3,
+        "score":100
     }
 
 }
